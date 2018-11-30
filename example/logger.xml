@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--日志级别以及优先级排序: OFF > FATAL > ERROR > WARN > INFO > DEBUG > TRACE > ALL -->
+<!--Configuration后面的status，这个用于设置log4j2自身内部的信息输出，可以不设置，当设置成trace时，你会看到log4j2内部各种详细输出-->
+<!--monitorInterval：Log4j能够自动检测修改配置 文件和重新配置本身，设置间隔秒数-->
+<Configuration monitorInterval="30">
+    <Properties>
+        <!--日志写入路径-->
+        <Property name="LOG_PATH">
+            logs/
+        </Property>
+        <!--日志存储路径-->
+        <Property name="LOG_STORAGE_PATH">
+            logs/storage
+        </Property>
+    </Properties>
+    <!--先定义所有的appender-->
+    <Loggers>
+    	<Logger name="Console" target="STDOUT">
+            <Level>
+                <!-- 允许大于等于 INFO 的日志 -->
+                <Allow>INFO</Allow>
+                <!-- 拒绝大于等于 WARN 的日志 -->
+                <Deny>WARN</Deny>
+            </Level>
+    	</Logger>
+    	
+    	<Logger name="FileInfo" target="FILE" fileName="${LOG_PATH}/info.log" 
+    				filePattern="${LOG_STORAGE_PATH}/$${date:yyyy-MM}/info-%d{yyyy-MM-dd}-%i.log.gz">
+            <Level>
+                <!-- 允许大于等于 INFO 的日志 -->
+                <Allow>INFO</Allow>
+                <!-- 拒绝大于等于 WARN 的日志 -->
+                <Deny>WARN</Deny>
+            </Level>
+            <Rolling>
+                <TimeBased>24</TimeBased>
+                <SizeBased>100MB</SizeBased>
+                <KeepCount>24</KeepCount>
+            </Rolling>
+    	</Logger>
+    	
+    	<Logger name="FileWarn" target="FILE" fileName="${LOG_PATH}/warn.log"
+    				filePattern="${LOG_STORAGE_PATH}/$${date:yyyy-MM}/info-%d{yyyy-MM-dd}-%i.log.gz">
+            <Level>
+                <!-- 允许大于等于 WARN 的日志 -->
+                <Allow>WARN</Allow>
+                <!-- 拒绝大于等于 ERROR 的日志 -->
+                <Deny>ERROR</Deny>
+            </Level>
+            <Rolling>
+                <TimeBased>24</TimeBased>
+                <SizeBased>100MB</SizeBased>
+                <KeepCount>24</KeepCount>
+            </Rolling>
+    	</Logger>
+    </Loggers>
+</Configuration>

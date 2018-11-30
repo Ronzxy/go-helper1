@@ -39,7 +39,8 @@ var (
 )
 
 type LogWriter struct {
-	level      int         // 日志级别
+	allowLevel int // 日志级别
+	denyLevel  int
 	name       string      // 日志名称
 	timeFormat string      // 时间格式
 	logger     *log.Logger // 日志对象
@@ -47,13 +48,22 @@ type LogWriter struct {
 
 func NewLogWriter(w io.Writer, level int) *LogWriter {
 	this := &LogWriter{
-		level:      level,
+		allowLevel: level,
+		denyLevel:  OFF,
 		name:       util.NewPath().WorkName(),
 		timeFormat: LogTimeFormat,
 		logger:     log.New(w, "", log.LUTC),
 	}
 
 	return this
+}
+
+func (this *LogWriter) SetDenyLevel(level int) {
+	if level > this.denyLevel {
+		this.allowLevel = OFF
+	} else {
+		this.denyLevel = level
+	}
 }
 
 func (this *LogWriter) SetName(name string) {
@@ -69,11 +79,13 @@ func (this *LogWriter) SetTimeFormat(timeFormat string) {
 }
 
 func (this *LogWriter) write(level int, levelName, format string, v ...interface{}) {
-	if this.level <= level {
-		format = fmt.Sprintf("%s - %s - %-5s - %s\n",
-			this.name, time.Now().Format(this.timeFormat), levelName, format)
+	if this.allowLevel <= level {
+		if this.denyLevel > level {
+			format = fmt.Sprintf("%s - %s - %-5s - %s\n",
+				this.name, time.Now().Format(this.timeFormat), levelName, format)
 
-		this.logger.Printf(format, v...)
+			this.logger.Printf(format, v...)
+		}
 	}
 }
 

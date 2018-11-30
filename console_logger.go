@@ -13,14 +13,14 @@ type ConsoleLogger struct {
 }
 
 var (
-	defaultLogger = NewCosoleLogger(ALL)
+	defaultLogger = NewConsoleLogger(ALL)
 )
 
 func DefaultConsoleLogger() *ConsoleLogger {
 	return defaultLogger
 }
 
-func NewCosoleLogger(level int) *ConsoleLogger {
+func NewConsoleLogger(level int) *ConsoleLogger {
 	this := &ConsoleLogger{
 		LogWriter:    NewLogWriter(DefaultWriter, level),
 		color:        NewColor(),
