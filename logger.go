@@ -13,32 +13,34 @@
 package logger
 
 import (
-	"github.com/skygangsta/go-logger/config"
-	"regexp"
-	"strings"
+	"fmt"
+	"github.com/robfig/cron"
+	"time"
 )
 
-type Logger struct {
-	logger []Writer
+var (
+	logger  *LoggerWriter
+	config  *Config
+	rolling = false
+	crontab = cron.New()
+)
+
+type LoggerWriter struct {
+	writers []Writer
 
 	properties map[string]string
 }
 
-var (
-	this *Logger
-)
-
-func GetLogger() *Logger {
-	return this
+func GetLogger() *LoggerWriter {
+	return logger
 }
 
 func InitLogger(configFile string) error {
 	var (
-		err    error
-		config *config.Config
+		err error
 	)
 
-	this = &Logger{
+	logger = &LoggerWriter{
 		properties: map[string]string{},
 	}
 
@@ -49,11 +51,13 @@ func InitLogger(configFile string) error {
 
 	if config.Properties != nil {
 		for _, v := range config.Properties {
-			this.properties[v.Name] = v.Value
+			logger.properties[v.Name] = v.Value
 		}
 	}
 
 	if config.Loggers != nil {
+		crontab.Start()
+
 		for _, v := range config.Loggers {
 			switch v.Target {
 			case "STDOUT":
@@ -63,10 +67,10 @@ func InitLogger(configFile string) error {
 						consoleLogger *ConsoleLogger
 					)
 
-					consoleLogger = NewConsoleLogger(convertLevelName(v.Level.Allow))
-					consoleLogger.SetDenyLevel(convertLevelName(v.Level.Deny))
+					consoleLogger = NewConsoleLogger(ConvertLevelName(v.Level.Allow))
+					consoleLogger.SetDenyLevel(ConvertLevelName(v.Level.Deny))
 
-					this.logger = append(this.logger, consoleLogger)
+					logger.writers = append(logger.writers, consoleLogger)
 				}
 			case "FILE":
 				{
@@ -75,11 +79,16 @@ func InitLogger(configFile string) error {
 						fileLogger *FileLogger
 					)
 
-					fileLogger, err = NewFileLogger(convertLevelName(v.Level.Allow), this.varReplacer(v.FileName), 0644)
+					fileLogger, err = NewFileLoggerWithConfig(v)
 					if err == nil {
-						fileLogger.SetDenyLevel(convertLevelName(v.Level.Deny))
+						if v.Rolling.TimeBased > 0 {
+							err = crontab.AddFunc(fmt.Sprintf("0 0 */%d * * ?", v.Rolling.TimeBased), fileLogger.rollingFile)
+							if err != nil {
+								Errorf("create cron error %s", err.Error())
+							}
+						}
 
-						this.logger = append(this.logger, fileLogger)
+						logger.writers = append(logger.writers, fileLogger)
 					} else {
 						DefaultConsoleLogger().Error(err.Error())
 					}
@@ -88,60 +97,70 @@ func InitLogger(configFile string) error {
 				DefaultConsoleLogger().Warnf("unsupported log target %s", v.Target)
 			}
 		}
+		// rolling log file
+		StartRolling()
+		go rollingFile()
 	}
 
 	return nil
 }
 
-func (this *Logger) varReplacer(str string) string {
-	r := regexp.MustCompile(`\${.*}`)
-	fileName := r.FindString(str)
+func rollingFile() {
+	for {
+		if logger.writers != nil && rolling {
+			for _, v := range logger.writers {
+				v.rolling()
+			}
+		}
+		if config.RollingInterval <= 0 {
+			config.RollingInterval = 60
+		}
+		time.Sleep(time.Duration(config.RollingInterval) * time.Second)
+	}
+}
 
-	r = regexp.MustCompile(`([A-Z_A-Z]+)`)
-	varName := r.FindString(fileName)
+func StartRolling() {
+	rolling = true
+	crontab.Start()
+}
 
-	varName = this.properties[varName]
-	varName = strings.Replace(varName, "\n", "", -1)
-	varName = strings.Trim(varName, " ")
-
-	fileName = strings.Replace(str, fileName, varName, -1)
-	fileName = strings.Replace(fileName, "//", "/", -1)
-
-	return fileName
+func StopRolling() {
+	rolling = false
+	crontab.Stop()
 }
 
 func Tracef(format string, v ...interface{}) {
-	for _, value := range this.logger {
+	for _, value := range logger.writers {
 		value.Tracef(format, v...)
 	}
 }
 
 func Debugf(format string, v ...interface{}) {
-	for _, value := range this.logger {
+	for _, value := range logger.writers {
 		value.Debugf(format, v...)
 	}
 }
 
 func Infof(format string, v ...interface{}) {
-	for _, value := range this.logger {
+	for _, value := range logger.writers {
 		value.Infof(format, v...)
 	}
 }
 
 func Warnf(format string, v ...interface{}) {
-	for _, value := range this.logger {
+	for _, value := range logger.writers {
 		value.Warnf(format, v...)
 	}
 }
 
 func Errorf(format string, v ...interface{}) {
-	for _, value := range this.logger {
+	for _, value := range logger.writers {
 		value.Errorf(format, v...)
 	}
 }
 
 func Fatalf(format string, v ...interface{}) {
-	for _, value := range this.logger {
+	for _, value := range logger.writers {
 		value.Fatalf(format, v...)
 	}
 }
@@ -168,29 +187,4 @@ func Error(message string) {
 
 func Fatal(message string) {
 	Fatalf("%s", message)
-}
-
-// ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF
-func convertLevelName(levelName string) int {
-	level := 0
-	switch strings.ToUpper(levelName) {
-	case "ALL":
-		level = ALL
-	case "TRACE":
-		level = TRACE
-	case "DEBUG":
-		level = DEBUG
-	case "INFO":
-		level = INFO
-	case "WARN":
-		level = WARN
-	case "ERROR":
-		level = ERROR
-	case "FATAL":
-		level = FATAL
-	default:
-		level = OFF
-	}
-
-	return level
 }

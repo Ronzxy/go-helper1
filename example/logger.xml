@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--日志级别以及优先级排序: OFF > FATAL > ERROR > WARN > INFO > DEBUG > TRACE > ALL -->
-<Configuration monitorInterval="30">
+<!--rollingInterval：logger能够自动滚动文件，设置滚动间隔秒数-->
+<Configuration rollingInterval="60">
     <Properties>
         <!--日志写入路径-->
         <Property name="LOG_PATH">
@@ -21,7 +22,7 @@
     	</Logger>
 
         <Logger name="FileTrace" target="FILE" fileName="${LOG_PATH}/trace.log"
-                filePattern="${LOG_STORAGE_PATH}/$${date:yyyy-MM}/info-%d{yyyy-MM-dd}-%i.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/trace-%{date:Y-m-d}-%{i}.log.gz">
             <Level>
                 <!-- 允许大于等于 TRACE 的日志 -->
                 <Allow>TRACE</Allow>
@@ -34,14 +35,12 @@
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
-                <KeepCount>24</KeepCount>
+                <KeepCount>16</KeepCount>
             </Rolling>
         </Logger>
 
-
-
         <Logger name="FileDebug" target="FILE" fileName="${LOG_PATH}/debug.log"
-                filePattern="${LOG_STORAGE_PATH}/$${date:yyyy-MM}/info-%d{yyyy-MM-dd}-%i.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/debug-%{date:Y-m-d}-%{i}.log.gz">
             <Level>
                 <!-- 允许大于等于 DEBUG 的日志 -->
                 <Allow>DEBUG</Allow>
@@ -54,12 +53,12 @@
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
-                <KeepCount>24</KeepCount>
+                <KeepCount>16</KeepCount>
             </Rolling>
         </Logger>
-    	
-    	<Logger name="FileInfo" target="FILE" fileName="${LOG_PATH}/info.log" 
-    				filePattern="${LOG_STORAGE_PATH}/$${date:yyyy-MM}/info-%d{yyyy-MM-dd}-%i.log.gz">
+
+    	<Logger name="FileInfo" target="FILE" fileName="${LOG_PATH}/info.log"
+    				filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/info-%{date:Y-m-d}-%{i}.log.gz">
             <Level>
                 <!-- 允许大于等于 INFO 的日志 -->
                 <Allow>INFO</Allow>
@@ -72,12 +71,12 @@
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
-                <KeepCount>24</KeepCount>
+                <KeepCount>16</KeepCount>
             </Rolling>
     	</Logger>
-    	
+
     	<Logger name="FileWarn" target="FILE" fileName="${LOG_PATH}/warn.log"
-    				filePattern="${LOG_STORAGE_PATH}/$${date:yyyy-MM}/info-%d{yyyy-MM-dd}-%i.log.gz">
+    				filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/warn-%{date:Y-m-d}-%{i}.log.gz">
             <Level>
                 <!-- 允许大于等于 WARN 的日志 -->
                 <Allow>WARN</Allow>
@@ -90,12 +89,12 @@
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
-                <KeepCount>24</KeepCount>
+                <KeepCount>16</KeepCount>
             </Rolling>
     	</Logger>
 
         <Logger name="FileError" target="FILE" fileName="${LOG_PATH}/error.log"
-                filePattern="${LOG_STORAGE_PATH}/$${date:yyyy-MM}/info-%d{yyyy-MM-dd}-%i.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/error-%{date:Y-m-d}-%{i}.log.gz">
             <Level>
                 <!-- 允许大于等于 ERROR 的日志 -->
                 <Allow>ERROR</Allow>
@@ -106,7 +105,7 @@
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
-                <KeepCount>24</KeepCount>
+                <KeepCount>16</KeepCount>
             </Rolling>
         </Logger>
     </Loggers>

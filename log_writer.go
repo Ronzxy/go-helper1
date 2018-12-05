@@ -21,23 +21,6 @@ import (
 	"time"
 )
 
-const (
-	ALL   = 0
-	TRACE = 1
-	DEBUG = 2
-	INFO  = 3
-	WARN  = 4
-	ERROR = 5
-	FATAL = 6
-	OFF   = 7
-
-	LogTimeFormat = "2006/01/02 15:04:05.000000"
-)
-
-var (
-	DefaultWriter io.Writer = os.Stdout
-)
-
 type LogWriter struct {
 	allowLevel int // 日志级别
 	denyLevel  int
