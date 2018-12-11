@@ -298,6 +298,19 @@ func (this *FileLogger) rollingFile() {
 		return
 	}
 
+	// if log file has no content,
+	// there is no need to rolling the file
+	fileInfo, err := this.writer.Stat()
+	if err != nil {
+		Errorf("check log file error with %s", err.Error())
+		return
+	}
+
+	// check file size
+	if fileInfo.Size() <= 0 {
+		return
+	}
+
 	err = this.createDir(storeFile)
 	if err != nil {
 		Errorf("create storage path error: %s", err.Error())
