@@ -61,7 +61,7 @@ func NewFileLoggerWithConfig(v Logger) (*FileLogger, error) {
 		err        error
 	)
 
-	fileLogger, err = NewFileLogger(ConvertLevelName(v.Level.Allow), fileLogger.variable(v.FileName), 0644)
+	fileLogger, err = NewFileLogger(ConvertLevelName(v.Level.Allow), fileLogger.varReplacer(v.FileName), 0644)
 	if err == nil {
 		fileLogger.SetDenyLevel(ConvertLevelName(v.Level.Deny))
 		fileLogger.config = v
@@ -113,7 +113,7 @@ func (this *FileLogger) createDir(fileName string) error {
 }
 
 // Replace ${([a-zA-Z_][0-9a-zA-Z_]+)} and %{([0-9a-zA-Z_:-]+} variable
-func (this *FileLogger) variable(fileName string) string {
+func (this *FileLogger) varReplacer(fileName string) string {
 	fileName = this.varDefineByConfig(fileName)
 	fileName = this.varDefineBySystem(fileName)
 
@@ -121,9 +121,9 @@ func (this *FileLogger) variable(fileName string) string {
 }
 
 // Replace ${([a-zA-Z_][0-9a-zA-Z_]+)} user defined variable
-func (this *FileLogger) varDefineByConfig(fileName string) string {
+func (this *FileLogger) varDefineByConfig(str string) string {
 	for {
-		varPattern, varName := Variable("$", "([a-zA-Z_][0-9a-zA-Z_]+)", fileName)
+		varPattern, varName := Variable("$", "([a-zA-Z_][0-9a-zA-Z_]+)", str)
 		if varName == "" {
 			// 没有发现变量，退出循环
 			break
@@ -133,17 +133,17 @@ func (this *FileLogger) varDefineByConfig(fileName string) string {
 		varName = strings.Replace(varName, "\n", "", -1)
 		varName = strings.Trim(varName, " ")
 
-		fileName = strings.Replace(fileName, varPattern, varName, -1)
-		fileName = strings.Replace(fileName, "//", "/", -1)
+		str = strings.Replace(str, varPattern, varName, -1)
+		str = strings.Replace(str, "//", "/", -1)
 	}
 
-	return fileName
+	return str
 }
 
 // Replace %{([a-zA-Z_][0-9a-zA-Z_:-]*} system defined variable
-func (this *FileLogger) varDefineBySystem(fileName string) string {
+func (this *FileLogger) varDefineBySystem(str string) string {
 	for {
-		varPattern, varName := Variable("%", "([a-zA-Z_][0-9a-zA-Z_/:-]*)", fileName)
+		varPattern, varName := Variable("%", "([a-zA-Z_][0-9a-zA-Z_/:-]*)", str)
 		if varName == "" {
 			// no variable, exit loop
 			break
@@ -182,29 +182,29 @@ func (this *FileLogger) varDefineBySystem(fileName string) string {
 			}
 		}
 
-		fileName = strings.Replace(fileName, varPattern, varName, -1)
+		str = strings.Replace(str, varPattern, varName, -1)
 	}
 
-	return fileName
+	return str
 }
 
-func (this *FileLogger) copy(read, write string) (int64, error) {
-	stat, err := os.Stat(read)
+func (this *FileLogger) copyFile(src, dst string) (int64, error) {
+	stat, err := os.Stat(src)
 	if err != nil {
 		return 0, err
 	}
 
 	if !stat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", read)
+		return 0, fmt.Errorf("%s is not a regular file", src)
 	}
 
-	reader, err := os.Open(read)
+	reader, err := os.Open(src)
 	if err != nil {
 		return 0, err
 	}
 	defer reader.Close()
 
-	writer, err := os.Create(write)
+	writer, err := os.Create(dst)
 	if err != nil {
 		return 0, err
 	}
@@ -272,11 +272,11 @@ func (this *FileLogger) rollingFile() {
 		newFile   string
 		err       error
 		b         bool
-		logFile   = this.variable(this.config.FileName)
+		logFile   = this.varReplacer(this.config.FileName)
 		utilPath  = util.NewPath()
 	)
 	for {
-		storeFile = this.variable(this.config.FilePattern)
+		storeFile = this.varReplacer(this.config.FilePattern)
 
 		b, err = utilPath.IsExist(storeFile)
 		if err != nil {
@@ -361,8 +361,8 @@ func (this *FileLogger) rollingFile() {
 			return
 		}
 	} else {
-		// copy file to store path
-		_, err = this.copy(newFile, storeFile)
+		// copyFile file to store path
+		_, err = this.copyFile(newFile, storeFile)
 		if err != nil {
 			Errorf("copy log file error: %s", err.Error())
 			return
@@ -375,7 +375,7 @@ func (this *FileLogger) rollingFile() {
 func (this *FileLogger) autoKeepFile() {
 	var (
 		storeFile string
-		logFile   = this.variable(this.config.FileName)
+		logFile   = this.varReplacer(this.config.FileName)
 		utilPath  = util.NewPath()
 	)
 	if (this.storeIndex - this.storeFirst - this.config.Rolling.KeepCount) >= 0 {
@@ -388,7 +388,7 @@ func (this *FileLogger) autoKeepFile() {
 			}
 
 			storeFile = strings.Replace(this.config.FilePattern, "%{i}", fmt.Sprintf("%02d", i), -1)
-			storeFile = this.variable(storeFile)
+			storeFile = this.varReplacer(storeFile)
 
 			inx := strings.LastIndex(storeFile, ".")
 			ext := storeFile[inx:]

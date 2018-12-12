@@ -99,29 +99,39 @@ func InitLogger(configFile string) error {
 		}
 		// rolling log file
 		StartRolling()
-		go rollingFile()
 	}
 
 	return nil
 }
 
 func rollingFile() {
+	if config.RollingInterval <= 0 {
+		config.RollingInterval = 60
+	}
+
 	for {
-		if logger.writers != nil && rolling {
-			for _, v := range logger.writers {
-				v.rolling()
+		select {
+		case <-time.After(time.Duration(config.RollingInterval) * time.Second):
+			// rolling file
+			if logger.writers != nil && rolling {
+				for _, v := range logger.writers {
+					v.rolling()
+				}
 			}
 		}
-		if config.RollingInterval <= 0 {
-			config.RollingInterval = 60
+
+		// if disable rolling break loop
+		if !rolling {
+			break
 		}
-		time.Sleep(time.Duration(config.RollingInterval) * time.Second)
 	}
 }
 
 func StartRolling() {
 	rolling = true
 	crontab.Start()
+
+	go rollingFile()
 }
 
 func StopRolling() {
