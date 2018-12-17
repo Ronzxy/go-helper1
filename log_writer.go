@@ -13,30 +13,30 @@
 package logger
 
 import (
-	"fmt"
 	"github.com/skygangsta/go-utils"
 	"io"
 	"log"
-	"os"
-	"time"
 )
 
 type LogWriter struct {
-	allowLevel int // 日志级别
-	denyLevel  int
-	name       string      // 日志名称
-	timeFormat string      // 时间格式
-	logger     *log.Logger // 日志对象
+	allowLevel      int
+	denyLevel       int
+	name            string
+	logger          *log.Logger
+	formatter       Formatter
+	skipCallerDepth int
 }
 
 func NewLogWriter(w io.Writer, level int) *LogWriter {
 	this := &LogWriter{
-		allowLevel: level,
-		denyLevel:  OFF,
-		name:       util.NewPath().WorkName(),
-		timeFormat: LogTimeFormat,
-		logger:     log.New(w, "", log.LUTC),
+		allowLevel:      level,
+		denyLevel:       OFF,
+		name:            util.NewPath().WorkName(),
+		logger:          log.New(w, "", log.LUTC),
+		skipCallerDepth: defaultSkipCallerDepth,
 	}
+
+	this.SetFormatter(NewTextFormatter())
 
 	return this
 }
@@ -49,6 +49,10 @@ func (this *LogWriter) SetDenyLevel(level int) {
 	}
 }
 
+func (this *LogWriter) SetSkipCallerDepth(skipCallerDepth int) {
+	this.skipCallerDepth = skipCallerDepth
+}
+
 func (this *LogWriter) SetName(name string) {
 	this.name = name
 }
@@ -57,68 +61,36 @@ func (this *LogWriter) SetWriter(w io.Writer) {
 	this.logger.SetOutput(w)
 }
 
-func (this *LogWriter) SetTimeFormat(timeFormat string) {
-	this.timeFormat = timeFormat
+func (this *LogWriter) SetFormatter(formatter Formatter) {
+	this.formatter = formatter
 }
 
-func (this *LogWriter) write(level int, levelName, format string, v ...interface{}) {
+func (this *LogWriter) Println(level int, args ...interface{}) {
 	if this.allowLevel <= level {
 		if this.denyLevel > level {
-			format = fmt.Sprintf("%s - %s - %-5s - %s\n",
-				this.name, time.Now().Format(this.timeFormat), levelName, format)
+			var (
+				data = map[string]interface{}{}
+			)
 
-			this.logger.Printf(format, v...)
+			frame := GetCaller(this.skipCallerDepth)
+
+			data["Name"] = this.name
+			data["Level"] = ConvertLevel2String(level)
+			data["Line"] = frame.Line
+			data["PackageName"] = GetPackageName(frame.Function)
+
+			//file := frame.File
+			//
+			//if strings.Contains(file, "/src/") {
+			//	files := strings.Split(file, "/src/")
+			//	file = files[1]
+			//}
+			//
+			data["File"] = GetFileName(frame.File)
+
+			//fmt.Println("GOPATH", sys.DefaultGoroot)
+
+			this.logger.Println(this.formatter.Message(data, args...))
 		}
 	}
-}
-
-// ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF
-func (this *LogWriter) Tracef(format string, v ...interface{}) {
-	this.write(TRACE, "TRACE", format, v...)
-}
-
-func (this *LogWriter) Debugf(format string, v ...interface{}) {
-	this.write(DEBUG, "DEBUG", format, v...)
-}
-
-func (this *LogWriter) Infof(format string, v ...interface{}) {
-	this.write(INFO, "INFO", format, v...)
-}
-
-func (this *LogWriter) Warnf(format string, v ...interface{}) {
-	this.write(WARN, "WARN", format, v...)
-}
-
-func (this *LogWriter) Errorf(format string, v ...interface{}) {
-	this.write(ERROR, "ERROR", format, v...)
-}
-
-func (this *LogWriter) Fatalf(format string, v ...interface{}) {
-	this.write(FATAL, "FATAL", format, v...)
-	os.Exit(1)
-}
-
-// ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF
-func (this *LogWriter) Trace(message string) {
-	this.Tracef("%s", message)
-}
-
-func (this *LogWriter) Debug(message string) {
-	this.Debugf("%s", message)
-}
-
-func (this *LogWriter) Info(message string) {
-	this.Infof("%s", message)
-}
-
-func (this *LogWriter) Warn(message string) {
-	this.Warnf("%s", message)
-}
-
-func (this *LogWriter) Error(message string) {
-	this.Errorf("%s", message)
-}
-
-func (this *LogWriter) Fatal(message string) {
-	this.Fatalf("%s", message)
 }

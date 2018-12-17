@@ -6,16 +6,33 @@ import (
 	"time"
 )
 
+type Message struct {
+	Dir    string
+	Perms  int
+	Parent string
+}
+
 func main() {
+	message1 := &Message{
+		Dir:    "/home/sky",
+		Perms:  755,
+		Parent: "/home",
+	}
+	message2 := &Message{
+		Dir:    "/home/sky",
+		Perms:  755,
+		Parent: "/home",
+	}
+
 	err := logger.InitLogger(path.Join("logger.xml"))
 	if err == nil {
 		go func() {
 			for {
 				logger.Trace("Trace message")
 				logger.Debug("Debug message")
-				logger.Info("Info message")
-				logger.Warn("Warn message")
-				logger.Error("Error message")
+				logger.Infof("Info message %d", 1024)
+				logger.Warn(message1, message2)
+				logger.Error("Error message", message1)
 				time.Sleep(30 * time.Second)
 			}
 		}()

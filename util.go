@@ -17,7 +17,9 @@ import (
 	"io"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
+	"sync"
 )
 
 const (
@@ -30,7 +32,7 @@ const (
 	FATAL = 6
 	OFF   = 7
 
-	LogTimeFormat = "2006/01/02 15:04:05.000000"
+	DefaultLogTimeFormat = "2006/01/02 15:04:05.000000"
 )
 
 var (
@@ -38,9 +40,9 @@ var (
 )
 
 // Convert string level name to level
-func ConvertLevelName(levelName string) int {
+func ConvertString2Level(str string) int {
 	level := 0
-	switch strings.ToUpper(levelName) {
+	switch strings.ToUpper(str) {
 	case "ALL":
 		level = ALL
 	case "TRACE":
@@ -62,6 +64,31 @@ func ConvertLevelName(levelName string) int {
 	return level
 }
 
+func ConvertLevel2String(level int) string {
+	str := ""
+
+	switch level {
+	case ALL:
+		str = "ALL"
+	case TRACE:
+		str = "TRACE"
+	case DEBUG:
+		str = "DEBUG"
+	case INFO:
+		str = "INFO"
+	case WARN:
+		str = "WARN"
+	case ERROR:
+		str = "ERROR"
+	case FATAL:
+		str = "FATAL"
+	default:
+		str = "OFF"
+	}
+
+	return str
+}
+
 // Find the variable define in properties
 func Variable(varchar, pattern, str string) (string, string) {
 	var (
@@ -75,4 +102,49 @@ func Variable(varchar, pattern, str string) (string, string) {
 	varName = r.FindString(varPattern)
 
 	return varPattern, varName
+}
+
+var (
+	// Used for caller information initialisation
+	callerInitOnce sync.Once
+
+	cachePackageName string
+)
+
+const (
+	defaultSkipCallerDepth = 5
+)
+
+func GetCaller(skip int) *runtime.Frame {
+	pcs := make([]uintptr, 16)
+	depth := runtime.Callers(skip, pcs)
+	frames := runtime.CallersFrames(pcs[:depth])
+
+	frame, _ := frames.Next()
+
+	return &frame
+}
+
+func GetPackageName(f string) string {
+	for {
+		lastPeriod := strings.LastIndex(f, ".")
+		lastSlash := strings.LastIndex(f, "/")
+		if lastPeriod > lastSlash {
+			f = f[:lastPeriod]
+		} else {
+			break
+		}
+	}
+
+	return f
+}
+
+func GetFileName(file string) string {
+	index := 0
+	substr := "/src/"
+	if strings.Contains(file, substr) {
+		index = strings.Index(file, substr)
+	}
+
+	return file[index+len(substr):]
 }

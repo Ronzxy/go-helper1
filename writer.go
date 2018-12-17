@@ -14,29 +14,29 @@ package logger
 
 // logger writer interface
 type Writer interface {
-	Tracef(format string, v ...interface{})
+	Tracef(format string, args ...interface{})
 
-	Debugf(format string, v ...interface{})
+	Debugf(format string, args ...interface{})
 
-	Infof(format string, v ...interface{})
+	Infof(format string, args ...interface{})
 
-	Warnf(format string, v ...interface{})
+	Warnf(format string, args ...interface{})
 
-	Errorf(format string, v ...interface{})
+	Errorf(format string, args ...interface{})
 
-	Fatalf(format string, v ...interface{})
+	Fatalf(exit bool, format string, args ...interface{})
 
-	Trace(message string)
+	Trace(args ...interface{})
 
-	Debug(message string)
+	Debug(args ...interface{})
 
-	Info(message string)
+	Info(args ...interface{})
 
-	Warn(message string)
+	Warn(args ...interface{})
 
-	Error(message string)
+	Error(args ...interface{})
 
-	Fatal(message string)
+	Fatal(exit bool, args ...interface{})
 
 	rolling()
 }

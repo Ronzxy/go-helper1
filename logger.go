@@ -15,6 +15,7 @@ package logger
 import (
 	"fmt"
 	"github.com/robfig/cron"
+	"os"
 	"time"
 )
 
@@ -67,8 +68,8 @@ func InitLogger(configFile string) error {
 						consoleLogger *ConsoleLogger
 					)
 
-					consoleLogger = NewConsoleLogger(ConvertLevelName(v.Level.Allow))
-					consoleLogger.SetDenyLevel(ConvertLevelName(v.Level.Deny))
+					consoleLogger = NewConsoleLogger(ConvertString2Level(v.Level.Allow))
+					consoleLogger.SetDenyLevel(ConvertString2Level(v.Level.Deny))
 
 					logger.writers = append(logger.writers, consoleLogger)
 				}
@@ -139,62 +140,76 @@ func StopRolling() {
 	crontab.Stop()
 }
 
-func Tracef(format string, v ...interface{}) {
+func Tracef(format string, args ...interface{}) {
 	for _, value := range logger.writers {
-		value.Tracef(format, v...)
+		value.Tracef(format, args...)
 	}
 }
 
-func Debugf(format string, v ...interface{}) {
+func Debugf(format string, args ...interface{}) {
 	for _, value := range logger.writers {
-		value.Debugf(format, v...)
+		value.Debugf(format, args...)
 	}
 }
 
-func Infof(format string, v ...interface{}) {
+func Infof(format string, args ...interface{}) {
 	for _, value := range logger.writers {
-		value.Infof(format, v...)
+		value.Infof(format, args...)
 	}
 }
 
-func Warnf(format string, v ...interface{}) {
+func Warnf(format string, args ...interface{}) {
 	for _, value := range logger.writers {
-		value.Warnf(format, v...)
+		value.Warnf(format, args...)
 	}
 }
 
-func Errorf(format string, v ...interface{}) {
+func Errorf(format string, args ...interface{}) {
 	for _, value := range logger.writers {
-		value.Errorf(format, v...)
+		value.Errorf(format, args...)
 	}
 }
 
-func Fatalf(format string, v ...interface{}) {
+func Fatalf(format string, args ...interface{}) {
 	for _, value := range logger.writers {
-		value.Fatalf(format, v...)
+		value.Fatalf(false, format, args...)
+	}
+	os.Exit(-1)
+}
+
+func Trace(args ...interface{}) {
+	for _, value := range logger.writers {
+		value.Trace(args...)
 	}
 }
 
-func Trace(message string) {
-	Tracef("%s", message)
+func Debug(args ...interface{}) {
+	for _, value := range logger.writers {
+		value.Debug(args...)
+	}
 }
 
-func Debug(message string) {
-	Debugf("%s", message)
+func Info(args ...interface{}) {
+	for _, value := range logger.writers {
+		value.Info(args...)
+	}
 }
 
-func Info(message string) {
-	Infof("%s", message)
+func Warn(args ...interface{}) {
+	for _, value := range logger.writers {
+		value.Warn(args...)
+	}
 }
 
-func Warn(message string) {
-	Warnf("%s", message)
+func Error(args ...interface{}) {
+	for _, value := range logger.writers {
+		value.Error(args...)
+	}
 }
 
-func Error(message string) {
-	Errorf("%s", message)
-}
-
-func Fatal(message string) {
-	Fatalf("%s", message)
+func Fatal(args ...interface{}) {
+	for _, value := range logger.writers {
+		value.Fatal(false, args...)
+	}
+	os.Exit(-1)
 }
