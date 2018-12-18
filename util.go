@@ -19,7 +19,6 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
-	"sync"
 )
 
 const (
@@ -37,6 +36,10 @@ const (
 
 var (
 	DefaultWriter io.Writer = os.Stdout
+)
+
+const (
+	defaultSkipCallerDepth = 5
 )
 
 // Convert string level name to level
@@ -104,16 +107,31 @@ func Variable(varchar, pattern, str string) (string, string) {
 	return varPattern, varName
 }
 
-var (
-	// Used for caller information initialisation
-	callerInitOnce sync.Once
+func VariableReplaceByConfig(str string) string {
+	for {
+		varPattern, varName := Variable("$", "([a-zA-Z_][0-9a-zA-Z_]+)", str)
+		if varName == "" {
+			// 没有发现变量，退出循环
+			break
+		}
 
-	cachePackageName string
-)
+		varName = RemoveEnterAndSpace(properties[varName])
 
-const (
-	defaultSkipCallerDepth = 5
-)
+		str = strings.Replace(str, varPattern, varName, -1)
+	}
+
+	str = RemoveEnterAndSpace(str)
+
+	return str
+}
+
+func RemoveEnterAndSpace(str string) string {
+	str = strings.Replace(str, "\r\n", "", -1)
+	str = strings.Replace(str, "\n", "", -1)
+	str = strings.Trim(str, " ")
+
+	return str
+}
 
 func GetCaller(skip int) *runtime.Frame {
 	pcs := make([]uintptr, 16)

@@ -122,22 +122,8 @@ func (this *FileLogger) varReplacer(fileName string) string {
 
 // Replace ${([a-zA-Z_][0-9a-zA-Z_]+)} user defined variable
 func (this *FileLogger) varDefineByConfig(str string) string {
-	for {
-		varPattern, varName := Variable("$", "([a-zA-Z_][0-9a-zA-Z_]+)", str)
-		if varName == "" {
-			// 没有发现变量，退出循环
-			break
-		}
 
-		varName = logger.properties[varName]
-		varName = strings.Replace(varName, "\n", "", -1)
-		varName = strings.Trim(varName, " ")
-
-		str = strings.Replace(str, varPattern, varName, -1)
-		str = strings.Replace(str, "//", "/", -1)
-	}
-
-	return str
+	return VariableReplaceByConfig(str)
 }
 
 // Replace %{([a-zA-Z_][0-9a-zA-Z_:-]*} system defined variable

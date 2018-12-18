@@ -36,8 +36,15 @@ type Logger struct {
 	Target      string   `xml:"target,attr"`
 	FileName    string   `xml:"fileName,attr"`
 	FilePattern string   `xml:"filePattern,attr"`
+	Format      Format   `xml:"Format"`
 	Level       Level    `xml:"Level"`
 	Rolling     Rolling  `xml:"Rolling"`
+}
+
+type Format struct {
+	XMLName xml.Name `xml:"Format"`
+	Type    string   `xml:"type,attr"`
+	Value   string   `xml:",innerxml"`
 }
 
 type Level struct {

@@ -21,6 +21,13 @@ func NewTextFormatter() *TextFormatter {
 	}
 }
 
+func NewTextFormatterWithFormat(format string) *TextFormatter {
+	this := NewTextFormatter()
+	this.Format = VariableReplaceByConfig(format)
+
+	return this
+}
+
 func (this *TextFormatter) SetFormat(format string) {
 	this.Format = format
 }

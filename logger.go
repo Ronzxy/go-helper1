@@ -16,20 +16,20 @@ import (
 	"fmt"
 	"github.com/robfig/cron"
 	"os"
+	"strings"
 	"time"
 )
 
 var (
-	logger  *LoggerWriter
-	config  *Config
-	rolling = false
-	crontab = cron.New()
+	config     *Config
+	logger     *LoggerWriter
+	properties map[string]string
+	rolling    = false
+	crontab    = cron.New()
 )
 
 type LoggerWriter struct {
 	writers []Writer
-
-	properties map[string]string
 }
 
 func GetLogger() *LoggerWriter {
@@ -38,21 +38,21 @@ func GetLogger() *LoggerWriter {
 
 func InitLogger(configFile string) error {
 	var (
-		err error
+		err       error
+		formatter Formatter
 	)
-
-	logger = &LoggerWriter{
-		properties: map[string]string{},
-	}
 
 	config, err = NewConfig(configFile)
 	if err != nil {
 		return err
 	}
 
+	properties = map[string]string{}
+	logger = &LoggerWriter{}
+
 	if config.Properties != nil {
 		for _, v := range config.Properties {
-			logger.properties[v.Name] = v.Value
+			properties[v.Name] = v.Value
 		}
 	}
 
@@ -60,6 +60,16 @@ func InitLogger(configFile string) error {
 		crontab.Start()
 
 		for _, v := range config.Loggers {
+			// 初始化 Formatter
+			switch strings.ToLower(v.Format.Type) {
+			case "text":
+				formatter = NewTextFormatterWithFormat(v.Format.Value)
+			case "json":
+				formatter = NewJSONFormatter()
+			default:
+				formatter = NewTextFormatter()
+			}
+
 			switch v.Target {
 			case "STDOUT":
 				{
@@ -70,6 +80,7 @@ func InitLogger(configFile string) error {
 
 					consoleLogger = NewConsoleLogger(ConvertString2Level(v.Level.Allow))
 					consoleLogger.SetDenyLevel(ConvertString2Level(v.Level.Deny))
+					consoleLogger.SetFormatter(formatter)
 
 					logger.writers = append(logger.writers, consoleLogger)
 				}
@@ -88,6 +99,8 @@ func InitLogger(configFile string) error {
 								Errorf("create cron error %s", err.Error())
 							}
 						}
+
+						fileLogger.SetFormatter(formatter)
 
 						logger.writers = append(logger.writers, fileLogger)
 					} else {

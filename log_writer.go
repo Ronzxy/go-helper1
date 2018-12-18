@@ -79,16 +79,7 @@ func (this *LogWriter) Println(level int, args ...interface{}) {
 			data["Line"] = frame.Line
 			data["PackageName"] = GetPackageName(frame.Function)
 
-			//file := frame.File
-			//
-			//if strings.Contains(file, "/src/") {
-			//	files := strings.Split(file, "/src/")
-			//	file = files[1]
-			//}
-			//
 			data["File"] = GetFileName(frame.File)
-
-			//fmt.Println("GOPATH", sys.DefaultGoroot)
 
 			this.logger.Println(this.formatter.Message(data, args...))
 		}

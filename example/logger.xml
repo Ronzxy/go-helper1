@@ -3,6 +3,10 @@
 <!--rollingInterval：logger能够自动滚动文件，设置滚动间隔秒数-->
 <Configuration rollingInterval="60">
     <Properties>
+        <!--日志输出格式-->
+        <Property name="LOG_FORMAT">
+            %{Name} - %{Time:Y-m-d H:M:S.ms} - %{Level:5} - %{File}:%{Line:4} - %{Message}
+        </Property>
         <!--日志写入路径-->
         <Property name="LOG_PATH">
             logs/
@@ -15,6 +19,10 @@
     <!--先定义所有的appender-->
     <Loggers>
     	<Logger name="Console" target="STDOUT">
+            <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
+            <Format type="text">
+                ${LOG_FORMAT}
+            </Format>
             <Level>
                 <!-- 允许大于等于 INFO 的日志 -->
                 <Allow>INFO</Allow>
@@ -23,6 +31,10 @@
 
         <Logger name="FileTrace" target="FILE" fileName="${LOG_PATH}/trace.log"
                 filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/trace-%{date:Y-m-d}-%{i}.log.gz">
+            <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
+            <Format type="json">
+                ${LOG_FORMAT}
+            </Format>
             <Level>
                 <!-- 允许大于等于 TRACE 的日志 -->
                 <Allow>TRACE</Allow>
@@ -41,6 +53,10 @@
 
         <Logger name="FileDebug" target="FILE" fileName="${LOG_PATH}/debug.log"
                 filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/debug-%{date:Y-m-d}-%{i}.log.gz">
+            <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
+            <Format type="json">
+                ${LOG_FORMAT}
+            </Format>
             <Level>
                 <!-- 允许大于等于 DEBUG 的日志 -->
                 <Allow>DEBUG</Allow>
@@ -59,6 +75,10 @@
 
     	<Logger name="FileInfo" target="FILE" fileName="${LOG_PATH}/info.log"
     				filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/info-%{date:Y-m-d}-%{i}.log.gz">
+            <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
+            <Format type="json">
+                ${LOG_FORMAT}
+            </Format>
             <Level>
                 <!-- 允许大于等于 INFO 的日志 -->
                 <Allow>INFO</Allow>
@@ -77,6 +97,10 @@
 
     	<Logger name="FileWarn" target="FILE" fileName="${LOG_PATH}/warn.log"
     				filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/warn-%{date:Y-m-d}-%{i}.log.gz">
+            <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
+            <Format type="json">
+                ${LOG_FORMAT}
+            </Format>
             <Level>
                 <!-- 允许大于等于 WARN 的日志 -->
                 <Allow>WARN</Allow>
@@ -95,6 +119,10 @@
 
         <Logger name="FileError" target="FILE" fileName="${LOG_PATH}/error.log"
                 filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/error-%{date:Y-m-d}-%{i}.log.gz">
+            <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
+            <Format type="json">
+                ${LOG_FORMAT}
+            </Format>
             <Level>
                 <!-- 允许大于等于 ERROR 的日志 -->
                 <Allow>ERROR</Allow>
