@@ -15,13 +15,13 @@ package logger
 
 import (
 	"fmt"
-	"github.com/skygangsta/go-utils"
+	"github.com/skygangsta/go-helper"
 	"testing"
 	"time"
 )
 
 func TestFileLogger(t *testing.T) {
-	filelogger, err := NewFileLogger(ALL, fmt.Sprintf("logs/fileLogger-%s.log", util.NewDate().Format(time.Now(), "Y-m-d-HMS.ns")), 0644)
+	filelogger, err := NewFileLogger(ALL, fmt.Sprintf("logs/fileLogger-%s.log", helper.NewTimeHelper().Format(time.Now(), "Y-m-d-HMS.ns")), 0644)
 	if err != nil {
 		defaultLogger.Error(err.Error())
 		return
@@ -37,7 +37,7 @@ func TestFileLogger(t *testing.T) {
 }
 
 func BenchmarkFileLogger(b *testing.B) {
-	filelogger, err := NewFileLogger(ALL, fmt.Sprintf("logs/fileLogger-%s.log", util.NewDate().Format(time.Now(), "Y-m-d-HMS.ns")), 0644)
+	filelogger, err := NewFileLogger(ALL, fmt.Sprintf("logs/fileLogger-%s.log", helper.NewTimeHelper().Format(time.Now(), "Y-m-d-HMS.ns")), 0644)
 	if err != nil {
 		defaultLogger.Error(err.Error())
 		return

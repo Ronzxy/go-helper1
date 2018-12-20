@@ -5,7 +5,7 @@
     <Properties>
         <!--日志输出格式-->
         <Property name="LOG_FORMAT">
-            %{Name} - %{Time:Y-m-d H:M:S.ms} - %{Level:5} - %{File}:%{Line:4} - %{Message}
+            %{Name} - %{Time:yyyy-mm-dd HH:MM:SS.ms} - %{Level:5} - %{File}:%{Line:4} - %{Message}
         </Property>
         <!--日志写入路径-->
         <Property name="LOG_PATH">
@@ -30,7 +30,7 @@
     	</Logger>
 
         <Logger name="FileTrace" target="FILE" fileName="${LOG_PATH}/trace.log"
-                filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/trace-%{date:Y-m-d}-%{i}.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/trace-%{date:yyyy-mm-dd}-%{i}.log.gz">
             <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
             <Format type="json">
                 ${LOG_FORMAT}
@@ -52,7 +52,7 @@
         </Logger>
 
         <Logger name="FileDebug" target="FILE" fileName="${LOG_PATH}/debug.log"
-                filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/debug-%{date:Y-m-d}-%{i}.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/debug-%{date:yyyy-mm-dd}-%{i}.log.gz">
             <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
             <Format type="json">
                 ${LOG_FORMAT}
@@ -74,7 +74,7 @@
         </Logger>
 
     	<Logger name="FileInfo" target="FILE" fileName="${LOG_PATH}/info.log"
-    				filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/info-%{date:Y-m-d}-%{i}.log.gz">
+    				filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/info-%{date:yyyy-mm-dd}-%{i}.log.gz">
             <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
             <Format type="json">
                 ${LOG_FORMAT}
@@ -96,7 +96,7 @@
     	</Logger>
 
     	<Logger name="FileWarn" target="FILE" fileName="${LOG_PATH}/warn.log"
-    				filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/warn-%{date:Y-m-d}-%{i}.log.gz">
+    				filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/warn-%{date:yyyy-mm-dd}-%{i}.log.gz">
             <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
             <Format type="json">
                 ${LOG_FORMAT}
@@ -118,7 +118,7 @@
     	</Logger>
 
         <Logger name="FileError" target="FILE" fileName="${LOG_PATH}/error.log"
-                filePattern="${LOG_STORAGE_PATH}/%{date:Y/m/d}/error-%{date:Y-m-d}-%{i}.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/error-%{date:yyyy-mm-dd}-%{i}.log.gz">
             <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
             <Format type="json">
                 ${LOG_FORMAT}

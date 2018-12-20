@@ -2,7 +2,7 @@ package logger
 
 import (
 	"fmt"
-	"github.com/skygangsta/go-utils"
+	"github.com/skygangsta/go-helper"
 	"strings"
 	"time"
 )
@@ -61,7 +61,7 @@ func (this *TextFormatter) Message(data map[string]interface{}, args ...interfac
 		case "TIME":
 			{
 				if vars[1] != "" {
-					varName = util.NewDate().Format(time.Now(), strings.Join(vars[1:], ":"))
+					varName = helper.NewTimeHelper().Format(time.Now(), strings.Join(vars[1:], ":"))
 				} else {
 					varName = time.Now().Format(DefaultLogTimeFormat)
 				}

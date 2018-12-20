@@ -13,7 +13,7 @@
 package logger
 
 import (
-	"github.com/skygangsta/go-utils"
+	"github.com/skygangsta/go-helper"
 	"io"
 	"log"
 )
@@ -31,7 +31,7 @@ func NewLogWriter(w io.Writer, level int) *LogWriter {
 	this := &LogWriter{
 		allowLevel:      level,
 		denyLevel:       OFF,
-		name:            util.NewPath().WorkName(),
+		name:            helper.NewPathHelper().WorkName(),
 		logger:          log.New(w, "", log.LUTC),
 		skipCallerDepth: defaultSkipCallerDepth,
 	}

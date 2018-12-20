@@ -38,5 +38,5 @@ type Writer interface {
 
 	Fatal(exit bool, args ...interface{})
 
-	rolling()
+	CheckRollingSize()
 }

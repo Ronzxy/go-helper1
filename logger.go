@@ -94,7 +94,7 @@ func InitLogger(configFile string) error {
 					fileLogger, err = NewFileLoggerWithConfig(v)
 					if err == nil {
 						if v.Rolling.TimeBased > 0 {
-							err = crontab.AddFunc(fmt.Sprintf("0 0 */%d * * ?", v.Rolling.TimeBased), fileLogger.rollingFile)
+							err = crontab.AddFunc(fmt.Sprintf("0 0 */%d * * ?", v.Rolling.TimeBased), fileLogger.RollingFile)
 							if err != nil {
 								Errorf("create cron error %s", err.Error())
 							}
@@ -118,7 +118,7 @@ func InitLogger(configFile string) error {
 	return nil
 }
 
-func rollingFile() {
+func rollingFileSize() {
 	if config.RollingInterval <= 0 {
 		config.RollingInterval = 60
 	}
@@ -129,7 +129,7 @@ func rollingFile() {
 			// rolling file
 			if logger.writers != nil && rolling {
 				for _, v := range logger.writers {
-					v.rolling()
+					v.CheckRollingSize()
 				}
 			}
 		}
@@ -145,7 +145,7 @@ func StartRolling() {
 	rolling = true
 	crontab.Start()
 
-	go rollingFile()
+	go rollingFileSize()
 }
 
 func StopRolling() {

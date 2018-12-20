@@ -123,4 +123,5 @@ func (this *ConsoleLogger) Fatal(exit bool, args ...interface{}) {
 	}
 }
 
-func (this *ConsoleLogger) rolling() {}
+// Do nothing with implement interface Writer
+func (this *ConsoleLogger) CheckRollingSize() {}

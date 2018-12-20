@@ -13,11 +13,9 @@
 package logger
 
 import (
-	"compress/gzip"
 	"errors"
 	"fmt"
-	"github.com/skygangsta/go-utils"
-	"io"
+	"github.com/skygangsta/go-helper"
 	"os"
 	"path"
 	"strings"
@@ -35,24 +33,23 @@ type FileLogger struct {
 
 func NewFileLogger(level int, configFile string, perm uint32) (*FileLogger, error) {
 	var (
-		this = &FileLogger{}
-		err  error
-		//p    = util.NewPath()
+		fileLogger = &FileLogger{}
+		err        error
 	)
 
-	err = this.createDir(configFile)
+	err = fileLogger.createDir(configFile)
 	if err != nil {
 		return nil, err
 	}
 
-	this.writer, err = os.OpenFile(configFile, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
+	fileLogger.writer, err = os.OpenFile(configFile, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
 		return nil, errors.New(fmt.Sprintf("error: Open config file %v", err))
 	}
 
-	this.LogWriter = NewLogWriter(this.writer, level)
+	fileLogger.LogWriter = NewLogWriter(fileLogger.writer, level)
 
-	return this, nil
+	return fileLogger, nil
 }
 
 func NewFileLoggerWithConfig(v Logger) (*FileLogger, error) {
@@ -61,7 +58,7 @@ func NewFileLoggerWithConfig(v Logger) (*FileLogger, error) {
 		err        error
 	)
 
-	fileLogger, err = NewFileLogger(ConvertString2Level(v.Level.Allow), fileLogger.varReplacer(v.FileName), 0644)
+	fileLogger, err = NewFileLogger(ConvertString2Level(v.Level.Allow), fileLogger.variableReplacer(v.FileName), 0644)
 	if err == nil {
 		fileLogger.SetDenyLevel(ConvertString2Level(v.Level.Deny))
 		fileLogger.config = v
@@ -72,36 +69,36 @@ func NewFileLoggerWithConfig(v Logger) (*FileLogger, error) {
 
 func (this *FileLogger) createDir(fileName string) error {
 	var (
-		p        = util.NewPath()
-		b        bool
-		s        []string
-		filePath string
-		err      error
+		pathHelper = helper.NewPathHelper()
+		isExist    bool
+		dirs       []string
+		filePath   string
+		err        error
 	)
-	filePath, err = p.Dir(fileName)
+	filePath, err = pathHelper.Dir(fileName)
 	if err != nil {
 		return err
 	}
 
-	b, err = p.IsExist(filePath)
+	isExist, err = pathHelper.IsExist(filePath)
 	if err != nil {
 		return err
 	}
 
-	if !b {
-		s = p.Split(filePath)
+	if !isExist {
+		dirs = pathHelper.Split(filePath)
 
 		filePath = ""
-		for _, v := range s {
+		for _, v := range dirs {
 			if v == "" {
 				filePath = "/"
 			} else {
 				filePath = path.Join(filePath, v)
 
-				err = p.Create(filePath, 0755)
+				err = pathHelper.Create(filePath, 0755)
 				if err != nil {
-					b, _ = p.IsExist(filePath)
-					if !b {
+					isExist, _ = pathHelper.IsExist(filePath)
+					if !isExist {
 						return err
 					}
 				}
@@ -113,58 +110,57 @@ func (this *FileLogger) createDir(fileName string) error {
 }
 
 // Replace ${([a-zA-Z_][0-9a-zA-Z_]+)} and %{([0-9a-zA-Z_:-]+} variable
-func (this *FileLogger) varReplacer(fileName string) string {
-	fileName = this.varDefineByConfig(fileName)
-	fileName = this.varDefineBySystem(fileName)
+func (this *FileLogger) variableReplacer(fileName string) string {
+	fileName = this.variableReplaceByConfig(fileName)
+	fileName = this.variableReplaceBySystem(fileName)
 
 	return fileName
 }
 
 // Replace ${([a-zA-Z_][0-9a-zA-Z_]+)} user defined variable
-func (this *FileLogger) varDefineByConfig(str string) string {
-
+func (this *FileLogger) variableReplaceByConfig(str string) string {
 	return VariableReplaceByConfig(str)
 }
 
 // Replace %{([a-zA-Z_][0-9a-zA-Z_:-]*} system defined variable
-func (this *FileLogger) varDefineBySystem(str string) string {
+func (this *FileLogger) variableReplaceBySystem(str string) string {
+	var (
+		varPattern string
+		varName    string
+		vars       = make([]string, 2)
+	)
 	for {
-		varPattern, varName := Variable("%", "([a-zA-Z_][0-9a-zA-Z_/:-]*)", str)
+		varPattern, varName = Variable("%", "([a-zA-Z_][0-9a-zA-Z_/:-]*)", str)
 		if varName == "" {
 			// no variable, exit loop
 			break
 		}
 
-		if strings.Contains(varName, ":") { // %{date:Y-m-d} variable
-			slice := strings.Split(varName, ":")
-			if len(slice) != 2 {
-				Error("unsupported function define")
+		if strings.Contains(varName, ":") {
+			vars = strings.Split(varName, ":")
+		} else {
+			vars[0] = varName
+			vars[1] = ""
+		}
+
+		switch strings.ToLower(vars[0]) {
+		case "date":
+			{
+				if vars[1] != "" {
+					varName = helper.NewTimeHelper().Format(time.Now(), strings.Join(vars[1:], ":"))
+				} else {
+					varName = time.Now().Format(DefaultLogTimeFormat)
+				}
+			}
+		case "i":
+			{
+				this.storeIndex = this.storeIndex + 1
+				varName = fmt.Sprintf("%02d", this.storeIndex)
+			}
+		default:
+			{
+				Errorf("unsupported function %s", vars[0])
 				varName = ""
-				continue
-			}
-			switch slice[0] {
-			case "date":
-				{
-					varName = util.NewDate().Format(time.Now(), slice[1])
-				}
-			default:
-				{
-					Errorf("unsupported function %s", slice[0])
-					varName = ""
-				}
-			}
-		} else { // %{i}
-			switch varName {
-			case "i":
-				{
-					this.storeIndex = this.storeIndex + 1
-					varName = fmt.Sprintf("%02d", this.storeIndex)
-				}
-			default:
-				{
-					Errorf("unsupported variable %s", varName)
-					varName = ""
-				}
 			}
 		}
 
@@ -174,77 +170,19 @@ func (this *FileLogger) varDefineBySystem(str string) string {
 	return str
 }
 
-func (this *FileLogger) copyFile(src, dst string) (int64, error) {
-	stat, err := os.Stat(src)
-	if err != nil {
-		return 0, err
-	}
-
-	if !stat.Mode().IsRegular() {
-		return 0, fmt.Errorf("%s is not a regular file", src)
-	}
-
-	reader, err := os.Open(src)
-	if err != nil {
-		return 0, err
-	}
-	defer reader.Close()
-
-	writer, err := os.Create(dst)
-	if err != nil {
-		return 0, err
-	}
-	defer writer.Close()
-
-	return io.Copy(writer, reader)
-}
-
-// gzip file to store path
-func (this *FileLogger) gzipFile(read, write string) error {
-	reader, err := os.Open(read)
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	writer, err := os.Create(write)
-	if err != nil {
-		return err
-	}
-	defer writer.Close()
-
-	gw, err := gzip.NewWriterLevel(writer, gzip.BestCompression)
-	if err != nil {
-		return err
-	}
-	defer gw.Close()
-
-	var bytes = make([]byte, 4096)
-	for {
-		n, err := reader.Read(bytes)
-		if err != nil {
-			if err.Error() != "EOF" {
-				return err
-			}
-
-			break
+func (this *FileLogger) CheckRollingSize() {
+	// if XMLName is empty, maybe not initial from config file
+	// and the config maybe be empty
+	if this.config.XMLName.Local != "" {
+		if this.config.Rolling.SizeBased <= 0 {
+			this.config.Rolling.SizeBased = 1
 		}
 
-		gw.Write(bytes[:n])
-		gw.Flush()
-	}
-
-	return nil
-}
-
-func (this *FileLogger) rolling() {
-	// if XMLName is empty, maybe not initial from config
-	if this.config.XMLName.Local != "" {
 		fileInfo, err := this.writer.Stat()
 		if err == nil {
 			// check file size
 			if fileInfo.Size() >= int64(this.config.Rolling.SizeBased)*1024*1024 {
-				this.rollingFile()
+				this.RollingFile()
 			}
 		} else {
 			Errorf("check file error with %s", err.Error())
@@ -252,26 +190,30 @@ func (this *FileLogger) rolling() {
 	}
 }
 
-func (this *FileLogger) rollingFile() {
+// Rolling a new file to write logger
+func (this *FileLogger) RollingFile() {
 	var (
-		storeFile string
-		newFile   string
-		err       error
-		b         bool
-		logFile   = this.varReplacer(this.config.FileName)
-		utilPath  = util.NewPath()
+		storeFileName string
+		newFileName   string
+		err           error
+		isExist       bool
+		logFileName   = this.variableReplacer(this.config.FileName)
+		pathHelper    = helper.NewPathHelper()
+		fileHelper    = helper.NewFileHelper()
 	)
-	for {
-		storeFile = this.varReplacer(this.config.FilePattern)
 
-		b, err = utilPath.IsExist(storeFile)
+	for {
+		storeFileName = this.variableReplacer(this.config.FilePattern)
+
+		isExist, err = pathHelper.IsExist(storeFileName)
 		if err != nil {
 			Errorf("check file exist error: %s", err.Error())
 			return
 		}
 
-		if b {
-			// The file already exists, continue execute to get the next file name
+		if isExist {
+			// The file already exists,
+			// continue execute to get the next file name
 			continue
 		}
 
@@ -279,7 +221,7 @@ func (this *FileLogger) rollingFile() {
 	}
 	// if storage file same name with log file,
 	// there is no need to rolling the file
-	if storeFile == logFile {
+	if storeFileName == logFileName {
 		Trace("store file name is same as log file, rolling file will be ignored")
 		return
 	}
@@ -297,40 +239,40 @@ func (this *FileLogger) rollingFile() {
 		return
 	}
 
-	err = this.createDir(storeFile)
+	err = this.createDir(storeFileName)
 	if err != nil {
 		Errorf("create storage path error: %s", err.Error())
 		return
 	}
 
-	inx := strings.LastIndex(storeFile, ".")
-	ext := storeFile[inx:]
+	inx := strings.LastIndex(storeFileName, ".")
+	ext := storeFileName[inx:]
 
 	if ext == ".gz" {
-		newFile = storeFile[:inx]
+		newFileName = storeFileName[:inx]
 	}
 
-	newPath, err := utilPath.Dir(logFile)
+	newPath, err := pathHelper.Dir(logFileName)
 	if err != nil {
 		Errorf("get log file base path error: %s", err.Error())
 		return
 	}
 
-	newName, err := utilPath.FileName(newFile)
+	newName, err := pathHelper.FileName(newFileName)
 	if err != nil {
 		Errorf("get log file name error: %s", err.Error())
 		return
 	}
 
-	newFile = path.Join(newPath, newName)
-	err = os.Rename(logFile, newFile)
+	newFileName = path.Join(newPath, newName)
+	err = os.Rename(logFileName, newFileName)
 	if err != nil {
 		Errorf("rename file error: %s", err.Error())
 		return
 	}
 
 	// create a new log file
-	this.writer, err = os.OpenFile(logFile, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
+	this.writer, err = os.OpenFile(logFileName, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
 	if err != nil {
 		Errorf("create log file error: %s", err.Error())
 		return
@@ -341,28 +283,28 @@ func (this *FileLogger) rollingFile() {
 
 	if ext == ".gz" {
 		// gzip file to store path
-		err = this.gzipFile(newFile, storeFile)
+		err = fileHelper.GZipFile(newFileName, storeFileName)
 		if err != nil {
 			Errorf("gzip file error: %s", err.Error())
 			return
 		}
 	} else {
 		// copyFile file to store path
-		_, err = this.copyFile(newFile, storeFile)
+		_, err = fileHelper.CopyFile(newFileName, storeFileName)
 		if err != nil {
 			Errorf("copy log file error: %s", err.Error())
 			return
 		}
 	}
 	// check keep count
-	this.autoKeepFile()
+	this.keepFile()
 }
 
-func (this *FileLogger) autoKeepFile() {
+func (this *FileLogger) keepFile() {
 	var (
-		storeFile string
-		logFile   = this.varReplacer(this.config.FileName)
-		utilPath  = util.NewPath()
+		storeFile  string
+		logFile    = this.variableReplacer(this.config.FileName)
+		pathHelper = helper.NewPathHelper()
 	)
 	if (this.storeIndex - this.storeFirst - this.config.Rolling.KeepCount) >= 0 {
 		for i := this.storeFirst; i <= this.storeIndex-this.config.Rolling.KeepCount; i++ {
@@ -374,7 +316,7 @@ func (this *FileLogger) autoKeepFile() {
 			}
 
 			storeFile = strings.Replace(this.config.FilePattern, "%{i}", fmt.Sprintf("%02d", i), -1)
-			storeFile = this.varReplacer(storeFile)
+			storeFile = this.variableReplacer(storeFile)
 
 			inx := strings.LastIndex(storeFile, ".")
 			ext := storeFile[inx:]
@@ -382,13 +324,13 @@ func (this *FileLogger) autoKeepFile() {
 				storeFile = storeFile[:inx]
 			}
 
-			newPath, err := utilPath.Dir(logFile)
+			newPath, err := pathHelper.Dir(logFile)
 			if err != nil {
 				Errorf("get log file base path error: %s", err.Error())
 				return
 			}
 
-			newName, err := utilPath.FileName(storeFile)
+			newName, err := pathHelper.FileName(storeFile)
 			if err != nil {
 				Errorf("get log file name error: %s", err.Error())
 				return
@@ -405,8 +347,6 @@ func (this *FileLogger) autoKeepFile() {
 	}
 }
 
-/***** LogWrite *****/
-// ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF
 func (this *FileLogger) Tracef(format string, args ...interface{}) {
 	this.Println(TRACE, fmt.Sprintf(format, args...))
 }

@@ -21,6 +21,8 @@ import (
 	"strings"
 )
 
+// Logger level
+// ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF
 const (
 	ALL   = 0
 	TRACE = 1
@@ -92,7 +94,7 @@ func ConvertLevel2String(level int) string {
 	return str
 }
 
-// Find the variable define in properties
+// Find the variable define in string
 func Variable(varchar, pattern, str string) (string, string) {
 	var (
 		varPattern string
@@ -107,6 +109,7 @@ func Variable(varchar, pattern, str string) (string, string) {
 	return varPattern, varName
 }
 
+// Replace the variable define in properties
 func VariableReplaceByConfig(str string) string {
 	for {
 		varPattern, varName := Variable("$", "([a-zA-Z_][0-9a-zA-Z_]+)", str)
@@ -160,7 +163,7 @@ func GetPackageName(f string) string {
 func GetFileName(file string) string {
 	index := 0
 	substr := "/src/"
-	if strings.Contains(file, substr) {
+	if strings.Count(file, substr) == 1 {
 		index = strings.Index(file, substr)
 	}
 
