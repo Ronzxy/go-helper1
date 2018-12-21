@@ -31,7 +31,7 @@ type FileLogger struct {
 	storeFirst int
 }
 
-func NewFileLogger(level int, configFile string, perm uint32) (*FileLogger, error) {
+func NewFileLogger(level int, configFile string) (*FileLogger, error) {
 	var (
 		fileLogger = &FileLogger{}
 		err        error
@@ -58,7 +58,7 @@ func NewFileLoggerWithConfig(v Logger) (*FileLogger, error) {
 		err        error
 	)
 
-	fileLogger, err = NewFileLogger(ConvertString2Level(v.Level.Allow), fileLogger.variableReplacer(v.FileName), 0644)
+	fileLogger, err = NewFileLogger(ConvertString2Level(v.Level.Allow), fileLogger.variableReplacer(v.FileName))
 	if err == nil {
 		fileLogger.SetDenyLevel(ConvertString2Level(v.Level.Deny))
 		fileLogger.config = v
