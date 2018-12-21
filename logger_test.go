@@ -23,7 +23,7 @@ var (
 
 func TestLogger(t *testing.T) {
 	if err != nil {
-		defaultLogger.Error(err.Error())
+		DefaultConsoleLogger().Error(err.Error())
 		return
 	}
 
@@ -38,7 +38,7 @@ func TestLogger(t *testing.T) {
 
 func BenchmarkLogger(b *testing.B) {
 	if err != nil {
-		defaultLogger.Error(err.Error())
+		DefaultConsoleLogger().Error(err.Error())
 		return
 	}
 

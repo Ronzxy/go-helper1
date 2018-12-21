@@ -23,7 +23,7 @@ import (
 func TestFileLogger(t *testing.T) {
 	filelogger, err := NewFileLogger(ALL, fmt.Sprintf("logs/fileLogger-test-%s.log", helper.NewTimeHelper().Format(time.Now(), "yyyy-mm-dd-HHMMSS.ns")))
 	if err != nil {
-		defaultLogger.Error(err.Error())
+		DefaultConsoleLogger().Error(err.Error())
 		return
 	}
 
@@ -39,7 +39,7 @@ func TestFileLogger(t *testing.T) {
 func BenchmarkFileLogger(b *testing.B) {
 	filelogger, err := NewFileLogger(ALL, fmt.Sprintf("logs/fileLogger-bench-%s.log", helper.NewTimeHelper().Format(time.Now(), "yyyy-mm-dd-HHMMSS.ns")))
 	if err != nil {
-		defaultLogger.Error(err.Error())
+		DefaultConsoleLogger().Error(err.Error())
 		return
 	}
 
