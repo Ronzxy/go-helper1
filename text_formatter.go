@@ -12,7 +12,7 @@ type TextFormatter struct {
 }
 
 var (
-	DefaultFormat = "%{Name} - %{Time:Y-m-d H:M:S.ms} - %{Level:5} - %{File}:%{Line:3} - %{Message}"
+	DefaultFormat = "%{Name} - %{Time:yyyy-mm-dd HH:MM:SS.ms} - %{Level:5} - %{File}:%{Line:3} - %{Message}"
 )
 
 func NewTextFormatter() *TextFormatter {
