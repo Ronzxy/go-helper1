@@ -25,11 +25,13 @@ type ConsoleLogger struct {
 }
 
 var (
-	defaultLogger = NewConsoleLogger(ALL)
+	defaultConsoleLogger = NewConsoleLogger(ALL)
 )
 
 func DefaultConsoleLogger() *ConsoleLogger {
-	return defaultLogger
+	defaultConsoleLogger.SetSkipCallerDepth(4)
+
+	return defaultConsoleLogger
 }
 
 func NewConsoleLogger(level int) *ConsoleLogger {
