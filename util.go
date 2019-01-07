@@ -160,12 +160,14 @@ func GetPackageName(f string) string {
 	return f
 }
 
-func GetFileName(file string) string {
+func GetFileName(file, packageName string) string {
 	index := 0
-	substr := "/src/"
-	if strings.Count(file, substr) == 1 {
-		index = strings.Index(file, substr)
+
+	if packageName != "" {
+		if strings.Count(file, packageName) > 0 {
+			index = strings.LastIndex(file, packageName)
+		}
 	}
 
-	return file[index+len(substr):]
+	return file[index:]
 }

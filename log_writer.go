@@ -80,7 +80,7 @@ func (this *LogWriter) Println(level int, args ...interface{}) {
 			data["Level"] = ConvertLevel2String(level)
 			data["Line"] = frame.Line
 			data["PackageName"] = GetPackageName(frame.Function)
-			data["File"] = GetFileName(frame.File)
+			data["File"] = GetFileName(frame.File, data["PackageName"].(string))
 
 			this.logger.Println(this.formatter.Message(data, args...))
 		}
