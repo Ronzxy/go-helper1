@@ -21,11 +21,12 @@ import (
 )
 
 var (
-	config     *Config
-	logger     *LoggerWriter
-	properties map[string]string
-	rolling    = false
-	crontab    = cron.New()
+	config      *Config
+	logger      *LoggerWriter
+	properties  map[string]string
+	rolling     = false
+	initialized = false
+	crontab     = cron.New()
 )
 
 type LoggerWriter struct {
@@ -36,7 +37,13 @@ func GetLogger() *LoggerWriter {
 	return logger
 }
 
+// Deprecated
 func InitLogger(configFile string) error {
+	DefaultConsoleLogger().Info("The InitLogger func has been deprecated, please switch to using the new Init func.")
+	return Init(configFile)
+}
+
+func Init(configFile string) error {
 	var (
 		err       error
 		formatter Formatter
@@ -111,6 +118,8 @@ func InitLogger(configFile string) error {
 				DefaultConsoleLogger().Warnf("unsupported log target %s", v.Target)
 			}
 		}
+
+		initialized = true
 		// rolling log file
 		StartRolling()
 	}
@@ -153,76 +162,128 @@ func StopRolling() {
 	crontab.Stop()
 }
 
+func Initialized() bool {
+	return initialized
+}
+
 func Tracef(format string, args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Tracef(format, args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Tracef(format, args...)
+		}
+	} else {
+		DefaultConsoleLogger().Tracef(format, args...)
 	}
 }
 
 func Debugf(format string, args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Debugf(format, args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Debugf(format, args...)
+		}
+	} else {
+		DefaultConsoleLogger().Debugf(format, args...)
 	}
 }
 
 func Infof(format string, args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Infof(format, args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Infof(format, args...)
+		}
+	} else {
+		DefaultConsoleLogger().Infof(format, args...)
 	}
 }
 
 func Warnf(format string, args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Warnf(format, args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Warnf(format, args...)
+		}
+	} else {
+		DefaultConsoleLogger().Warnf(format, args...)
 	}
 }
 
 func Errorf(format string, args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Errorf(format, args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Errorf(format, args...)
+		}
+	} else {
+		DefaultConsoleLogger().Errorf(format, args...)
 	}
 }
 
 func Fatalf(format string, args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Fatalf(false, format, args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Fatalf(false, format, args...)
+		}
+	} else {
+		DefaultConsoleLogger().Fatalf(false, format, args...)
 	}
 	os.Exit(-1)
 }
 
 func Trace(args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Trace(args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Trace(args...)
+		}
+	} else {
+		DefaultConsoleLogger().Trace(args...)
 	}
 }
 
 func Debug(args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Debug(args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Debug(args...)
+		}
+	} else {
+		DefaultConsoleLogger().Debug(args...)
 	}
 }
 
 func Info(args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Info(args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Info(args...)
+		}
+	} else {
+		DefaultConsoleLogger().Info(args...)
 	}
 }
 
 func Warn(args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Warn(args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Warn(args...)
+		}
+	} else {
+		DefaultConsoleLogger().Warn(args...)
 	}
 }
 
 func Error(args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Error(args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Error(args...)
+		}
+	} else {
+		DefaultConsoleLogger().Error(args...)
 	}
 }
 
 func Fatal(args ...interface{}) {
-	for _, value := range logger.writers {
-		value.Fatal(false, args...)
+	if Initialized() {
+		for _, value := range logger.writers {
+			value.Fatal(false, args...)
+		}
+	} else {
+		DefaultConsoleLogger().Fatal(false, args...)
 	}
 	os.Exit(-1)
 }

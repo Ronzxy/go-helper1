@@ -18,7 +18,7 @@ import (
 )
 
 var (
-	err = InitLogger("example/logger.xml")
+	err = Init("example/logger.xml")
 )
 
 func TestLogger(t *testing.T) {

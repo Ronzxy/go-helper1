@@ -24,7 +24,7 @@ func main() {
 		Parent: "/home",
 	}
 
-	err := logger.InitLogger(path.Join("logger.xml"))
+	err := logger.Init(path.Join("logger.xml"))
 	if err == nil {
 		go func() {
 			for {
