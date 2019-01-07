@@ -13,6 +13,7 @@
 package logger
 
 import (
+	"github.com/go-xorm/core"
 	"github.com/skygangsta/go-helper"
 	"io"
 	"log"
@@ -25,6 +26,7 @@ type LogWriter struct {
 	logger          *log.Logger
 	formatter       Formatter
 	skipCallerDepth int
+	showSQL         bool
 }
 
 func NewLogWriter(w io.Writer, level int) *LogWriter {
@@ -78,10 +80,33 @@ func (this *LogWriter) Println(level int, args ...interface{}) {
 			data["Level"] = ConvertLevel2String(level)
 			data["Line"] = frame.Line
 			data["PackageName"] = GetPackageName(frame.Function)
-
 			data["File"] = GetFileName(frame.File)
 
 			this.logger.Println(this.formatter.Message(data, args...))
 		}
 	}
+}
+
+/*
+Implement xorm logger
+*/
+
+// Set to xorm log all
+func (this *LogWriter) Level() core.LogLevel {
+	return core.LOG_DEBUG
+}
+
+func (this *LogWriter) SetLevel(l core.LogLevel) {
+
+}
+
+func (this *LogWriter) ShowSQL(show ...bool) {
+	if len(show) == 0 {
+		this.showSQL = true
+		return
+	}
+	this.showSQL = show[0]
+}
+func (this *LogWriter) IsShowSQL() bool {
+	return this.showSQL
 }
