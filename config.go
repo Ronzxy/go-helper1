@@ -21,6 +21,8 @@ type Config struct {
 	XMLName         xml.Name   `xml:"Configuration"`
 	Properties      []Property `xml:"Properties>Property"`
 	Loggers         []Logger   `xml:"Loggers>Logger"`
+	Default         Filter     `xml:"Filters>Default>Filter"`
+	Filters         []Filter   `xml:"Filters>Package>Filter"`
 	RollingInterval int        `xml:"rollingInterval,attr"`
 }
 
@@ -58,6 +60,12 @@ type Rolling struct {
 	TimeBased int      `xml:"TimeBased"`
 	SizeBased int      `xml:"SizeBased"`
 	KeepCount int      `xml:"KeepCount"`
+}
+
+type Filter struct {
+	XMLName xml.Name `xml:"Filter"`
+	Name    string   `xml:"name,attr"`
+	Loggers []string `xml:"Logger"`
 }
 
 func NewConfig(configFile string) (*Config, error) {

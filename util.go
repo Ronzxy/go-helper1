@@ -146,6 +146,7 @@ func GetCaller(skip int) *runtime.Frame {
 	return &frame
 }
 
+// Get the package name by runtime.Frame.Function
 func GetPackageName(f string) string {
 	for {
 		lastPeriod := strings.LastIndex(f, ".")
@@ -160,14 +161,15 @@ func GetPackageName(f string) string {
 	return f
 }
 
-func GetFileName(file, packageName string) string {
+func GetFileName(frame *runtime.Frame) string {
 	index := 0
+	packageName := GetPackageName(frame.Function)
 
 	if packageName != "" {
-		if strings.Count(file, packageName) > 0 {
-			index = strings.LastIndex(file, packageName)
+		if strings.Count(frame.File, packageName) > 0 {
+			index = strings.LastIndex(frame.File, packageName)
 		}
 	}
 
-	return file[index:]
+	return frame.File[index:]
 }

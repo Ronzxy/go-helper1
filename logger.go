@@ -40,6 +40,7 @@ func GetLogger() *LoggerWriter {
 // Deprecated
 func InitLogger(configFile string) error {
 	DefaultConsoleLogger().Info("The InitLogger func has been deprecated, please switch to using the new Init func.")
+
 	return Init(configFile)
 }
 
@@ -88,6 +89,7 @@ func Init(configFile string) error {
 					consoleLogger = NewConsoleLogger(ConvertString2Level(v.Level.Allow))
 					consoleLogger.SetDenyLevel(ConvertString2Level(v.Level.Deny))
 					consoleLogger.SetFormatter(formatter)
+					consoleLogger.loggerName = v.Name
 
 					logger.writers = append(logger.writers, consoleLogger)
 				}
@@ -101,13 +103,14 @@ func Init(configFile string) error {
 					fileLogger, err = NewFileLoggerWithConfig(v)
 					if err == nil {
 						if v.Rolling.TimeBased > 0 {
-							err = crontab.AddFunc(fmt.Sprintf("0 0 */%d * * ?", v.Rolling.TimeBased), fileLogger.RollingFile)
+							err = crontab.AddFunc(fmt.Sprintf("1 0 */%d * * ?", v.Rolling.TimeBased), fileLogger.RollingFile)
 							if err != nil {
 								Errorf("create cron error %s", err.Error())
 							}
 						}
 
 						fileLogger.SetFormatter(formatter)
+						fileLogger.loggerName = v.Name
 
 						logger.writers = append(logger.writers, fileLogger)
 					} else {
