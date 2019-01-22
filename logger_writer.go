@@ -77,28 +77,34 @@ func (this *LoggerWriter) filter(frame *runtime.Frame) bool {
 		return true
 	}
 
-	if config.Filters != nil {
-		for _, filter := range config.Filters {
-			packageName := GetPackageName(frame.Function)
-			if packageName == filter.Name {
-				if len(filter.Loggers) <= 0 {
-					// No Logger define
-					return false
-				}
-				for _, name := range filter.Loggers {
-					if name == this.loggerName {
-						return true
-					}
+	if config.Filters == nil {
+		return false
+	}
+
+	for _, filter := range config.Filters {
+		packageName := GetPackageName(frame.Function)
+		if packageName == filter.Name {
+			if len(filter.Loggers) == 0 {
+				// No Logger define
+				return false
+			}
+
+			for _, name := range filter.Loggers {
+				if name == this.loggerName {
+					return true
 				}
 			}
 		}
 	}
 
-	if len(config.Default.Loggers) > 0 {
-		for _, name := range config.Default.Loggers {
-			if name == this.loggerName {
-				return true
-			}
+	if len(config.Default.Loggers) == 0 {
+		// No Logger define
+		return false
+	}
+
+	for _, name := range config.Default.Loggers {
+		if name == this.loggerName {
+			return true
 		}
 	}
 
@@ -112,21 +118,27 @@ func (this *LoggerWriter) Println(level int, args ...interface{}) {
 		return
 	}
 
-	if this.allowLevel <= level {
-		if this.denyLevel > level {
-			var (
-				data = map[string]interface{}{}
-			)
-
-			data["Name"] = this.workName
-			data["Level"] = ConvertLevel2String(level)
-			data["Line"] = frame.Line
-			data["PackageName"] = GetPackageName(frame.Function)
-			data["File"] = GetFileName(frame)
-
-			this.logger.Println(this.formatter.Message(data, args...))
-		}
+	// Reject logs that are less than the allowed level
+	if level < this.allowLevel {
+		return
 	}
+
+	// Reject logs greater than or equal to the rejection level
+	if level >= this.denyLevel {
+		return
+	}
+
+	var (
+		data = map[string]interface{}{}
+	)
+
+	data["Name"] = this.workName
+	data["Level"] = ConvertLevel2String(level)
+	data["Line"] = frame.Line
+	data["PackageName"] = GetPackageName(frame.Function)
+	data["File"] = GetFileName(frame)
+
+	this.logger.Println(this.formatter.Message(data, args...))
 }
 
 /*
@@ -193,8 +205,8 @@ func (this *FileLogger) Fatal(exit bool, args ...interface{}) {
 Implement xorm logger
 */
 
-// Set to xorm log all
 func (this *LoggerWriter) Level() core.LogLevel {
+	// Set to xorm log all
 	return core.LOG_DEBUG
 }
 

@@ -86,6 +86,38 @@ func Init(configFile string) error {
 	return nil
 }
 
+func GetByPackage(packageName string) []Writer {
+	if !Initialized() {
+		return nil
+	}
+
+	if config.Filters == nil {
+		return nil
+	}
+
+	var writers []Writer
+
+	for _, filter := range config.Filters {
+		//packageName := GetPackageName(frame.Function)
+		if packageName == filter.Name {
+			if len(filter.Loggers) == 0 {
+				// No Logger define
+				return nil
+			}
+
+			for _, name := range filter.Loggers {
+				writer := writerMap[name]
+				if writer == nil {
+					continue
+				}
+				writers = append(writers, writer)
+			}
+		}
+	}
+
+	return writers
+}
+
 func initProperties() {
 	if len(config.Properties) > 0 {
 		for _, v := range config.Properties {

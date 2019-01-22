@@ -5,7 +5,7 @@
     <Properties>
         <!--日志输出格式-->
         <Property name="LOG_FORMAT">
-            %{Name} - %{Time:yyyy-mm-dd HH:MM:SS.ms} - %{Level:5} - %{File}:%{Line:4} - %{Message}
+            %{Name} - %{Time:yyyy-mm-dd HH:MM:SS.ms} - %{Level:5} - %{File}:%{Line:3} - %{Message}
         </Property>
         <!--日志写入路径-->
         <Property name="LOG_PATH">
@@ -146,6 +146,21 @@
             </Filter>
         </DefaultFilter>
         <PackageFilter>
+            <!--
+                go-logger 实现了 go-xorm ILogger 接口但它不直接使用 go-logger 记录需要在代码中主动设置 go-xorm 日志
+
+                writes := logger.GetByPackage("github.com/go-xorm/xorm")
+                if writes != nil {
+                    for _, v := range writes {
+                        v.ShowSQL()
+                        config.Postgres.Conn.SetLogger(v)
+                    }
+                }
+            -->
+            <Filter name="github.com/go-xorm/xorm">
+                <Logger>FileInfo</Logger>
+            </Filter>
+
             <Filter name="github.com/skygangsta/go-logger">
                 <Logger>FileError</Logger>
             </Filter>

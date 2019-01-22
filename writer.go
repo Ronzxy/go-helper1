@@ -12,6 +12,8 @@
 
 package logger
 
+import "github.com/go-xorm/core"
+
 // logger writer interface
 type Writer interface {
 	Tracef(format string, args ...interface{})
@@ -39,4 +41,16 @@ type Writer interface {
 	Fatal(exit bool, args ...interface{})
 
 	CheckRollingSize()
+
+	/*
+	   Include xorm logger
+	*/
+
+	Level() core.LogLevel
+
+	SetLevel(l core.LogLevel)
+
+	ShowSQL(show ...bool)
+
+	IsShowSQL() bool
 }
