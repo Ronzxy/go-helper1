@@ -138,21 +138,17 @@
         </Logger>
     </Loggers>
     <Filters>
-        <Default>
+        <DefaultFilter>
             <Filter>
                 <Logger>Console</Logger>
                 <Logger>FileInfo</Logger>
                 <Logger>FileError</Logger>
             </Filter>
-        </Default>
-        <Package>
-            <Filter name="github.com/go-xorm/core">
-                <Logger>FileInfo</Logger>
-            </Filter>
-
+        </DefaultFilter>
+        <PackageFilter>
             <Filter name="github.com/skygangsta/go-logger">
                 <Logger>FileError</Logger>
             </Filter>
-        </Package>
+        </PackageFilter>
     </Filters>
 </Configuration>

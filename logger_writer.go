@@ -22,7 +22,7 @@ import (
 	"runtime"
 )
 
-type LogWriter struct {
+type LoggerWriter struct {
 	allowLevel      int
 	denyLevel       int
 	workName        string // 工作名
@@ -30,11 +30,12 @@ type LogWriter struct {
 	logger          *log.Logger
 	formatter       Formatter
 	skipCallerDepth int
+	closeFilter     bool
 	showSQL         bool
 }
 
-func NewLogWriter(w io.Writer, level int) *LogWriter {
-	this := &LogWriter{
+func NewLoggerWriter(w io.Writer, level int) *LoggerWriter {
+	this := &LoggerWriter{
 		allowLevel:      level,
 		denyLevel:       OFF,
 		workName:        helper.NewPathHelper().WorkName(),
@@ -47,7 +48,7 @@ func NewLogWriter(w io.Writer, level int) *LogWriter {
 	return this
 }
 
-func (this *LogWriter) SetDenyLevel(level int) {
+func (this *LoggerWriter) SetDenyLevel(level int) {
 	if level > this.denyLevel {
 		this.allowLevel = OFF
 	} else {
@@ -55,33 +56,38 @@ func (this *LogWriter) SetDenyLevel(level int) {
 	}
 }
 
-func (this *LogWriter) SetSkipCallerDepth(skipCallerDepth int) {
+func (this *LoggerWriter) SetSkipCallerDepth(skipCallerDepth int) {
 	this.skipCallerDepth = skipCallerDepth
 }
 
-func (this *LogWriter) SetName(name string) {
+func (this *LoggerWriter) SetName(name string) {
 	this.workName = name
 }
 
-func (this *LogWriter) SetWriter(w io.Writer) {
+func (this *LoggerWriter) SetWriter(w io.Writer) {
 	this.logger.SetOutput(w)
 }
 
-func (this *LogWriter) SetFormatter(formatter Formatter) {
+func (this *LoggerWriter) SetFormatter(formatter Formatter) {
 	this.formatter = formatter
 }
 
-func (this *LogWriter) filter(frame *runtime.Frame) bool {
+func (this *LoggerWriter) filter(frame *runtime.Frame) bool {
+	if this.closeFilter {
+		return true
+	}
 
-	packageName := GetPackageName(frame.Function)
 	if config.Filters != nil {
 		for _, filter := range config.Filters {
+			packageName := GetPackageName(frame.Function)
 			if packageName == filter.Name {
-				if len(filter.Loggers) > 0 {
-					for _, name := range filter.Loggers {
-						if name == this.loggerName {
-							return true
-						}
+				if len(filter.Loggers) <= 0 {
+					// No Logger define
+					return false
+				}
+				for _, name := range filter.Loggers {
+					if name == this.loggerName {
+						return true
 					}
 				}
 			}
@@ -99,7 +105,7 @@ func (this *LogWriter) filter(frame *runtime.Frame) bool {
 	return false
 }
 
-func (this *LogWriter) Println(level int, args ...interface{}) {
+func (this *LoggerWriter) Println(level int, args ...interface{}) {
 	frame := GetCaller(this.skipCallerDepth)
 
 	if !this.filter(frame) {
@@ -188,15 +194,15 @@ Implement xorm logger
 */
 
 // Set to xorm log all
-func (this *LogWriter) Level() core.LogLevel {
+func (this *LoggerWriter) Level() core.LogLevel {
 	return core.LOG_DEBUG
 }
 
-func (this *LogWriter) SetLevel(l core.LogLevel) {
+func (this *LoggerWriter) SetLevel(l core.LogLevel) {
 
 }
 
-func (this *LogWriter) ShowSQL(show ...bool) {
+func (this *LoggerWriter) ShowSQL(show ...bool) {
 	if len(show) == 0 {
 		this.showSQL = true
 		return
@@ -204,6 +210,6 @@ func (this *LogWriter) ShowSQL(show ...bool) {
 	this.showSQL = show[0]
 }
 
-func (this *LogWriter) IsShowSQL() bool {
+func (this *LoggerWriter) IsShowSQL() bool {
 	return this.showSQL
 }

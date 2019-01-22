@@ -23,7 +23,7 @@ import (
 )
 
 type FileLogger struct {
-	*LogWriter
+	*LoggerWriter
 
 	writer     *os.File
 	config     Logger
@@ -47,7 +47,7 @@ func NewFileLogger(level int, configFile string) (*FileLogger, error) {
 		return nil, errors.New(fmt.Sprintf("error: Open config file %v", err))
 	}
 
-	fileLogger.LogWriter = NewLogWriter(fileLogger.writer, level)
+	fileLogger.LoggerWriter = NewLoggerWriter(fileLogger.writer, level)
 
 	return fileLogger, nil
 }
@@ -278,7 +278,7 @@ func (this *FileLogger) RollingFile() {
 		return
 	}
 
-	this.LogWriter = NewLogWriter(this.writer, ConvertString2Level(this.config.Level.Allow))
+	this.LoggerWriter = NewLoggerWriter(this.writer, ConvertString2Level(this.config.Level.Allow))
 	this.SetDenyLevel(ConvertString2Level(this.config.Level.Deny))
 
 	if ext == ".gz" {

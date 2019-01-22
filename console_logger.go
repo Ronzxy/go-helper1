@@ -18,7 +18,7 @@ import (
 )
 
 type ConsoleLogger struct {
-	*LogWriter
+	*LoggerWriter
 
 	color        *Color
 	consoleColor bool // use terminal color
@@ -30,13 +30,15 @@ var (
 
 func DefaultConsoleLogger() *ConsoleLogger {
 	defaultConsoleLogger.SetSkipCallerDepth(4)
+	defaultConsoleLogger.loggerName = "DefaultConsoleNoFilter"
+	defaultConsoleLogger.closeFilter = true
 
 	return defaultConsoleLogger
 }
 
 func NewConsoleLogger(level int) *ConsoleLogger {
 	this := &ConsoleLogger{
-		LogWriter:    NewLogWriter(DefaultWriter, level),
+		LoggerWriter: NewLoggerWriter(DefaultWriter, level),
 		color:        NewColor(),
 		consoleColor: true,
 	}

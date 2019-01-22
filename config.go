@@ -21,8 +21,8 @@ type Config struct {
 	XMLName         xml.Name   `xml:"Configuration"`
 	Properties      []Property `xml:"Properties>Property"`
 	Loggers         []Logger   `xml:"Loggers>Logger"`
-	Default         Filter     `xml:"Filters>Default>Filter"`
-	Filters         []Filter   `xml:"Filters>Package>Filter"`
+	Default         Filter     `xml:"Filters>DefaultFilter>Filter"`
+	Filters         []Filter   `xml:"Filters>PackageFilter>Filter"`
 	RollingInterval int        `xml:"rollingInterval,attr"`
 }
 

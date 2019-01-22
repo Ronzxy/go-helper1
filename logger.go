@@ -22,32 +22,16 @@ import (
 
 var (
 	config      *Config
-	logger      *LoggerWriter
-	properties  map[string]string
+	properties  = map[string]string{}
+	writerMap   = map[string]Writer{}
 	rolling     = false
 	initialized = false
 	crontab     = cron.New()
 )
 
-type LoggerWriter struct {
-	writers []Writer
-}
-
-func GetLogger() *LoggerWriter {
-	return logger
-}
-
-// Deprecated
-func InitLogger(configFile string) error {
-	DefaultConsoleLogger().Info("The InitLogger func has been deprecated, please switch to using the new Init func.")
-
-	return Init(configFile)
-}
-
 func Init(configFile string) error {
 	var (
-		err       error
-		formatter Formatter
+		err error
 	)
 
 	config, err = NewConfig(configFile)
@@ -55,19 +39,69 @@ func Init(configFile string) error {
 		return err
 	}
 
-	properties = map[string]string{}
-	logger = &LoggerWriter{}
+	initProperties()
 
-	if config.Properties != nil {
+	crontab.Start()
+
+	if config.Loggers != nil {
+		// Initialize the Writer of the package filter reference
+		if config.Filters != nil {
+			for _, filter := range config.Filters {
+				if len(filter.Loggers) <= 0 {
+					break
+				}
+
+				for _, loggerName := range filter.Loggers {
+					if writerMap[loggerName] != nil {
+						continue
+					}
+
+					logger := initLogger(loggerName)
+					if logger != nil {
+						writerMap[loggerName] = logger
+					}
+				}
+			}
+		}
+
+		// Initialize the Writer of the default filter reference
+		if len(config.Default.Loggers) > 0 {
+			for _, loggerName := range config.Default.Loggers {
+				if writerMap[loggerName] != nil {
+					continue
+				}
+
+				logger := initLogger(loggerName)
+				if logger != nil {
+					writerMap[loggerName] = logger
+				}
+			}
+		}
+
+		initialized = true
+		// rolling log file
+		StartRolling()
+	}
+
+	return nil
+}
+
+func initProperties() {
+	if len(config.Properties) > 0 {
 		for _, v := range config.Properties {
 			properties[v.Name] = v.Value
 		}
 	}
+}
 
-	if config.Loggers != nil {
-		crontab.Start()
+func initLogger(name string) Writer {
+	var (
+		err       error
+		formatter Formatter
+	)
 
-		for _, v := range config.Loggers {
+	for _, v := range config.Loggers {
+		if name == v.Name {
 			// 初始化 Formatter
 			switch strings.ToLower(v.Format.Type) {
 			case "text":
@@ -91,7 +125,7 @@ func Init(configFile string) error {
 					consoleLogger.SetFormatter(formatter)
 					consoleLogger.loggerName = v.Name
 
-					logger.writers = append(logger.writers, consoleLogger)
+					return consoleLogger
 				}
 			case "FILE":
 				{
@@ -112,7 +146,7 @@ func Init(configFile string) error {
 						fileLogger.SetFormatter(formatter)
 						fileLogger.loggerName = v.Name
 
-						logger.writers = append(logger.writers, fileLogger)
+						return fileLogger
 					} else {
 						DefaultConsoleLogger().Error(err.Error())
 					}
@@ -121,10 +155,6 @@ func Init(configFile string) error {
 				DefaultConsoleLogger().Warnf("unsupported log target %s", v.Target)
 			}
 		}
-
-		initialized = true
-		// rolling log file
-		StartRolling()
 	}
 
 	return nil
@@ -139,8 +169,8 @@ func rollingFileSize() {
 		select {
 		case <-time.After(time.Duration(config.RollingInterval) * time.Second):
 			// rolling file
-			if logger.writers != nil && rolling {
-				for _, v := range logger.writers {
+			if writerMap != nil && rolling {
+				for _, v := range writerMap {
 					v.CheckRollingSize()
 				}
 			}
@@ -171,7 +201,7 @@ func Initialized() bool {
 
 func Tracef(format string, args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Tracef(format, args...)
 		}
 	} else {
@@ -181,7 +211,7 @@ func Tracef(format string, args ...interface{}) {
 
 func Debugf(format string, args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Debugf(format, args...)
 		}
 	} else {
@@ -191,7 +221,7 @@ func Debugf(format string, args ...interface{}) {
 
 func Infof(format string, args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Infof(format, args...)
 		}
 	} else {
@@ -201,7 +231,7 @@ func Infof(format string, args ...interface{}) {
 
 func Warnf(format string, args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Warnf(format, args...)
 		}
 	} else {
@@ -211,7 +241,7 @@ func Warnf(format string, args ...interface{}) {
 
 func Errorf(format string, args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Errorf(format, args...)
 		}
 	} else {
@@ -221,7 +251,7 @@ func Errorf(format string, args ...interface{}) {
 
 func Fatalf(format string, args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Fatalf(false, format, args...)
 		}
 	} else {
@@ -232,7 +262,7 @@ func Fatalf(format string, args ...interface{}) {
 
 func Trace(args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Trace(args...)
 		}
 	} else {
@@ -242,7 +272,7 @@ func Trace(args ...interface{}) {
 
 func Debug(args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Debug(args...)
 		}
 	} else {
@@ -252,7 +282,7 @@ func Debug(args ...interface{}) {
 
 func Info(args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Info(args...)
 		}
 	} else {
@@ -262,7 +292,7 @@ func Info(args ...interface{}) {
 
 func Warn(args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Warn(args...)
 		}
 	} else {
@@ -272,7 +302,7 @@ func Warn(args ...interface{}) {
 
 func Error(args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Error(args...)
 		}
 	} else {
@@ -282,7 +312,7 @@ func Error(args ...interface{}) {
 
 func Fatal(args ...interface{}) {
 	if Initialized() {
-		for _, value := range logger.writers {
+		for _, value := range writerMap {
 			value.Fatal(false, args...)
 		}
 	} else {
