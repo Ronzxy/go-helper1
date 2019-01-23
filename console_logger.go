@@ -14,13 +14,14 @@ package logger
 
 import (
 	"fmt"
+	"github.com/skygangsta/go-helper"
 	"os"
 )
 
 type ConsoleLogger struct {
 	*LoggerWriter
 
-	color        *Color
+	color        *helper.ConsoleColorHelper
 	consoleColor bool // use terminal color
 }
 
@@ -29,17 +30,16 @@ var (
 )
 
 func DefaultConsoleLogger() *ConsoleLogger {
-	defaultConsoleLogger.SetSkipCallerDepth(4)
-	defaultConsoleLogger.loggerName = "DefaultConsoleNoFilter"
+	defaultConsoleLogger.name = "DefaultConsoleNoFilter"
 	defaultConsoleLogger.closeFilter = true
 
 	return defaultConsoleLogger
 }
 
-func NewConsoleLogger(level int) *ConsoleLogger {
+func NewConsoleLogger(level LogLevel) *ConsoleLogger {
 	this := &ConsoleLogger{
 		LoggerWriter: NewLoggerWriter(DefaultWriter, level),
-		color:        NewColor(),
+		color:        helper.NewConsoleColorHelper(),
 		consoleColor: true,
 	}
 
@@ -61,32 +61,32 @@ func (this *ConsoleLogger) addColor(color string, args ...interface{}) []interfa
 // ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF
 func (this *ConsoleLogger) Tracef(format string, args ...interface{}) {
 	args = this.addColor(this.color.Blue(), fmt.Sprintf(format, args...))
-	this.Println(TRACE, args...)
+	this.Write(TRACE, args...)
 }
 
 func (this *ConsoleLogger) Debugf(format string, args ...interface{}) {
 	args = this.addColor(this.color.Green(), fmt.Sprintf(format, args...))
-	this.Println(DEBUG, args...)
+	this.Write(DEBUG, args...)
 }
 
 func (this *ConsoleLogger) Infof(format string, args ...interface{}) {
 	args = this.addColor(this.color.Cyan(), fmt.Sprintf(format, args...))
-	this.Println(INFO, args...)
+	this.Write(INFO, args...)
 }
 
 func (this *ConsoleLogger) Warnf(format string, args ...interface{}) {
 	args = this.addColor(this.color.Magenta(), fmt.Sprintf(format, args...))
-	this.Println(WARN, args...)
+	this.Write(WARN, args...)
 }
 
 func (this *ConsoleLogger) Errorf(format string, args ...interface{}) {
 	args = this.addColor(this.color.Yello(), fmt.Sprintf(format, args...))
-	this.Println(ERROR, args...)
+	this.Write(ERROR, args...)
 }
 
-func (this *ConsoleLogger) Fatalf(exit bool, format string, args ...interface{}) {
+func (this *ConsoleLogger) FatalfWithExit(exit bool, format string, args ...interface{}) {
 	args = this.addColor(this.color.Red(), fmt.Sprintf(format, args...))
-	this.Println(FATAL, args...)
+	this.Write(FATAL, args...)
 
 	if exit {
 		os.Exit(1)
@@ -95,32 +95,32 @@ func (this *ConsoleLogger) Fatalf(exit bool, format string, args ...interface{})
 
 func (this *ConsoleLogger) Trace(args ...interface{}) {
 	args = this.addColor(this.color.Blue(), args...)
-	this.Println(TRACE, args...)
+	this.Write(TRACE, args...)
 }
 
 func (this *ConsoleLogger) Debug(args ...interface{}) {
 	args = this.addColor(this.color.Green(), args...)
-	this.Println(DEBUG, args...)
+	this.Write(DEBUG, args...)
 }
 
 func (this *ConsoleLogger) Info(args ...interface{}) {
 	args = this.addColor(this.color.Cyan(), args...)
-	this.Println(INFO, args...)
+	this.Write(INFO, args...)
 }
 
 func (this *ConsoleLogger) Warn(args ...interface{}) {
 	args = this.addColor(this.color.Magenta(), args...)
-	this.Println(WARN, args...)
+	this.Write(WARN, args...)
 }
 
 func (this *ConsoleLogger) Error(args ...interface{}) {
 	args = this.addColor(this.color.Yello(), args...)
-	this.Println(ERROR, args...)
+	this.Write(ERROR, args...)
 }
 
-func (this *ConsoleLogger) Fatal(exit bool, args ...interface{}) {
+func (this *ConsoleLogger) FatalWithExit(exit bool, args ...interface{}) {
 	args = this.addColor(this.color.Red(), args...)
-	this.Println(FATAL, args...)
+	this.Write(FATAL, args...)
 
 	if exit {
 		os.Exit(1)

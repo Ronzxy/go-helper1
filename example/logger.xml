@@ -5,7 +5,7 @@
     <Properties>
         <!--日志输出格式-->
         <Property name="LOG_FORMAT">
-            %{Name} - %{Time:yyyy-mm-dd HH:MM:SS.ms} - %{Level:5} - %{File}:%{Line:3} - %{Message}
+            %{Prefix} - %{Time:yyyy-mm-dd HH:MM:SS.ms} - %{Level:5} - %{File}:%{Line:3} - %{Message}
         </Property>
         <!--日志写入路径-->
         <Property name="LOG_PATH">
@@ -42,8 +42,8 @@
                 <Deny>DEBUG</Deny>
             </Level>
             <Rolling>
-                <!-- 基于时间滚动，单位小时 -->
-                <TimeBased>24</TimeBased>
+                <!-- 基于时间滚动，使用 cron 库，文档：https://godoc.org/github.com/robfig/cron -->
+                <TimeBased>@daily</TimeBased>
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
@@ -64,8 +64,8 @@
                 <Deny>INFO</Deny>
             </Level>
             <Rolling>
-                <!-- 基于时间滚动，单位小时 -->
-                <TimeBased>24</TimeBased>
+                <!-- 基于时间滚动，使用 cron 库，文档：https://godoc.org/github.com/robfig/cron -->
+                <TimeBased>@daily</TimeBased>
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
@@ -86,8 +86,8 @@
                 <Deny>WARN</Deny>
             </Level>
             <Rolling>
-                <!-- 基于时间滚动，单位小时 -->
-                <TimeBased>24</TimeBased>
+                <!-- 基于时间滚动，使用 cron 库，文档：https://godoc.org/github.com/robfig/cron -->
+                <TimeBased>@daily</TimeBased>
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
@@ -108,8 +108,8 @@
                 <Deny>ERROR</Deny>
             </Level>
             <Rolling>
-                <!-- 基于时间滚动，单位小时 -->
-                <TimeBased>24</TimeBased>
+                <!-- 基于时间滚动，使用 cron 库，文档：https://godoc.org/github.com/robfig/cron -->
+                <TimeBased>@daily</TimeBased>
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
@@ -128,8 +128,8 @@
                 <Allow>ERROR</Allow>
             </Level>
             <Rolling>
-                <!-- 基于时间滚动，单位小时 -->
-                <TimeBased>24</TimeBased>
+                <!-- 基于时间滚动，使用 cron 库，文档：https://godoc.org/github.com/robfig/cron -->
+                <TimeBased>@daily</TimeBased>
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->

@@ -21,34 +21,40 @@ import (
 )
 
 func TestFileLogger(t *testing.T) {
-	filelogger, err := NewFileLogger(ALL, fmt.Sprintf("logs/fileLogger-test-%s.log", helper.NewTimeHelper().Format(time.Now(), "yyyy-mm-dd-HHMMSS.ns")))
+	DefaultConsoleLogger().SetSkipCallerDepth(4)
+	fileLogger, err := NewFileLogger(ALL, fmt.Sprintf("logs/fileLogger-test-%s.log", helper.NewTimeHelper().Format(time.Now(), "yyyy-mm-dd-HHMMSS.ns")))
 	if err != nil {
 		DefaultConsoleLogger().Error(err.Error())
 		return
 	}
 
-	filelogger.Trace("Test FileLogger trace message")
-	filelogger.Debug("Test FileLogger debug message")
-	filelogger.Info("Test FileLogger info message")
-	filelogger.Warn("Test FileLogger warn message")
-	filelogger.Error("Test FileLogger error message")
+	fileLogger.closeFilter = true
+	fileLogger.SetSkipCallerDepth(4)
+	fileLogger.Trace("Test FileLogger trace message")
+	fileLogger.Debug("Test FileLogger debug message")
+	fileLogger.Info("Test FileLogger info message")
+	fileLogger.Warn("Test FileLogger warn message")
+	fileLogger.Error("Test FileLogger error message")
 
 	t.Log("Test FileLogger finished.")
 }
 
 func BenchmarkFileLogger(b *testing.B) {
-	filelogger, err := NewFileLogger(ALL, fmt.Sprintf("logs/fileLogger-bench-%s.log", helper.NewTimeHelper().Format(time.Now(), "yyyy-mm-dd-HHMMSS.ns")))
+	DefaultConsoleLogger().SetSkipCallerDepth(4)
+	fileLogger, err := NewFileLogger(ALL, fmt.Sprintf("logs/fileLogger-bench-%s.log", helper.NewTimeHelper().Format(time.Now(), "yyyy-mm-dd-HHMMSS.ns")))
 	if err != nil {
 		DefaultConsoleLogger().Error(err.Error())
 		return
 	}
+	fileLogger.closeFilter = true
+	fileLogger.SetSkipCallerDepth(4)
 
 	for i := 0; i < b.N; i++ {
-		filelogger.Trace("Benchmark FileLogger trace message")
-		filelogger.Debug("Benchmark FileLogger debug message")
-		filelogger.Info("Benchmark FileLogger info message")
-		filelogger.Warn("Benchmark FileLogger warn message")
-		filelogger.Error("Benchmark FileLogger error message")
+		fileLogger.Trace("Benchmark FileLogger trace message")
+		fileLogger.Debug("Benchmark FileLogger debug message")
+		fileLogger.Info("Benchmark FileLogger info message")
+		fileLogger.Warn("Benchmark FileLogger warn message")
+		fileLogger.Error("Benchmark FileLogger error message")
 
 		b.Log("Benchmark FileLogger finished.")
 	}

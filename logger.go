@@ -13,7 +13,6 @@
 package logger
 
 import (
-	"fmt"
 	"github.com/robfig/cron"
 	"os"
 	"strings"
@@ -22,11 +21,11 @@ import (
 
 var (
 	config      *Config
-	properties  = map[string]string{}
+	job         = cron.New()
+	propertyMap = map[string]string{}
 	writerMap   = map[string]Writer{}
 	rolling     = false
 	initialized = false
-	crontab     = cron.New()
 )
 
 func Init(configFile string) error {
@@ -41,12 +40,12 @@ func Init(configFile string) error {
 
 	initProperties()
 
-	crontab.Start()
+	job.Start()
 
 	if config.Loggers != nil {
 		// Initialize the Writer of the package filter reference
-		if config.Filters != nil {
-			for _, filter := range config.Filters {
+		if config.PackageFilters != nil {
+			for _, filter := range config.PackageFilters {
 				if len(filter.Loggers) <= 0 {
 					break
 				}
@@ -65,8 +64,8 @@ func Init(configFile string) error {
 		}
 
 		// Initialize the Writer of the default filter reference
-		if len(config.Default.Loggers) > 0 {
-			for _, loggerName := range config.Default.Loggers {
+		if len(config.DefaultFilter.Loggers) > 0 {
+			for _, loggerName := range config.DefaultFilter.Loggers {
 				if writerMap[loggerName] != nil {
 					continue
 				}
@@ -91,13 +90,13 @@ func GetByPackage(packageName string) []Writer {
 		return nil
 	}
 
-	if config.Filters == nil {
+	if config.PackageFilters == nil {
 		return nil
 	}
 
 	var writers []Writer
 
-	for _, filter := range config.Filters {
+	for _, filter := range config.PackageFilters {
 		//packageName := GetPackageName(frame.Function)
 		if packageName == filter.Name {
 			if len(filter.Loggers) == 0 {
@@ -121,7 +120,7 @@ func GetByPackage(packageName string) []Writer {
 func initProperties() {
 	if len(config.Properties) > 0 {
 		for _, v := range config.Properties {
-			properties[v.Name] = v.Value
+			propertyMap[v.Name] = v.Value
 		}
 	}
 }
@@ -155,7 +154,7 @@ func initLogger(name string) Writer {
 					consoleLogger = NewConsoleLogger(ConvertString2Level(v.Level.Allow))
 					consoleLogger.SetDenyLevel(ConvertString2Level(v.Level.Deny))
 					consoleLogger.SetFormatter(formatter)
-					consoleLogger.loggerName = v.Name
+					consoleLogger.name = v.Name
 
 					return consoleLogger
 				}
@@ -168,15 +167,17 @@ func initLogger(name string) Writer {
 
 					fileLogger, err = NewFileLoggerWithConfig(v)
 					if err == nil {
-						if v.Rolling.TimeBased > 0 {
-							err = crontab.AddFunc(fmt.Sprintf("1 0 */%d * * ?", v.Rolling.TimeBased), fileLogger.RollingFile)
-							if err != nil {
-								Errorf("create cron error %s", err.Error())
-							}
+						if v.Rolling.TimeBased == "" {
+							v.Rolling.TimeBased = "@daily"
+						}
+
+						err = job.AddFunc(v.Rolling.TimeBased, fileLogger.RollingFile)
+						if err != nil {
+							Errorf("create cron error %s", err.Error())
 						}
 
 						fileLogger.SetFormatter(formatter)
-						fileLogger.loggerName = v.Name
+						fileLogger.name = v.Name
 
 						return fileLogger
 					} else {
@@ -217,14 +218,14 @@ func rollingFileSize() {
 
 func StartRolling() {
 	rolling = true
-	crontab.Start()
+	job.Start()
 
 	go rollingFileSize()
 }
 
 func StopRolling() {
 	rolling = false
-	crontab.Stop()
+	job.Stop()
 }
 
 func Initialized() bool {
@@ -284,10 +285,10 @@ func Errorf(format string, args ...interface{}) {
 func Fatalf(format string, args ...interface{}) {
 	if Initialized() {
 		for _, value := range writerMap {
-			value.Fatalf(false, format, args...)
+			value.FatalfWithExit(false, format, args...)
 		}
 	} else {
-		DefaultConsoleLogger().Fatalf(false, format, args...)
+		DefaultConsoleLogger().FatalfWithExit(false, format, args...)
 	}
 	os.Exit(-1)
 }
@@ -345,10 +346,10 @@ func Error(args ...interface{}) {
 func Fatal(args ...interface{}) {
 	if Initialized() {
 		for _, value := range writerMap {
-			value.Fatal(false, args...)
+			value.FatalWithExit(false, args...)
 		}
 	} else {
-		DefaultConsoleLogger().Fatal(false, args...)
+		DefaultConsoleLogger().FatalWithExit(false, args...)
 	}
 	os.Exit(-1)
 }

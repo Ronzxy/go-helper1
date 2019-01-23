@@ -12,7 +12,7 @@ type TextFormatter struct {
 }
 
 var (
-	DefaultFormat = "%{Name} - %{Time:yyyy-mm-dd HH:MM:SS.ms} - %{Level:5} - %{File}:%{Line:3} - %{Message}"
+	DefaultFormat = "%{Prefix} - %{Time:yyyy-mm-dd HH:MM:SS.ms} - %{Level:5} - %{File}:%{Line:3} - %{Message}"
 )
 
 func NewTextFormatter() *TextFormatter {
@@ -54,9 +54,9 @@ func (this *TextFormatter) Message(data map[string]interface{}, args ...interfac
 		}
 
 		switch strings.ToUpper(vars[0]) {
-		case "NAME":
+		case "PREFIX":
 			{
-				varName = fmt.Sprintf("%v", data["Name"])
+				varName = fmt.Sprintf("%v", data["Prefix"])
 			}
 		case "TIME":
 			{
@@ -95,12 +95,11 @@ func (this *TextFormatter) Message(data map[string]interface{}, args ...interfac
 			}
 		case "MESSAGE":
 			{
-				//format := fmt.Sprintf("%s", data["Format"])
 				varName = fmt.Sprint(args...)
 			}
 		default:
 			{
-				Errorf("unsupported log format %s", varName)
+				DefaultConsoleLogger().Errorf("unsupported log format %s", varName)
 			}
 		}
 

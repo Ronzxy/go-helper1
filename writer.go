@@ -26,7 +26,7 @@ type Writer interface {
 
 	Errorf(format string, args ...interface{})
 
-	Fatalf(exit bool, format string, args ...interface{})
+	FatalfWithExit(exit bool, format string, args ...interface{})
 
 	Trace(args ...interface{})
 
@@ -38,7 +38,7 @@ type Writer interface {
 
 	Error(args ...interface{})
 
-	Fatal(exit bool, args ...interface{})
+	FatalWithExit(exit bool, args ...interface{})
 
 	CheckRollingSize()
 

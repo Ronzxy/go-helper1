@@ -19,11 +19,11 @@ import (
 
 type Config struct {
 	XMLName         xml.Name   `xml:"Configuration"`
+	RollingInterval int        `xml:"rollingInterval,attr"`
 	Properties      []Property `xml:"Properties>Property"`
 	Loggers         []Logger   `xml:"Loggers>Logger"`
-	Default         Filter     `xml:"Filters>DefaultFilter>Filter"`
-	Filters         []Filter   `xml:"Filters>PackageFilter>Filter"`
-	RollingInterval int        `xml:"rollingInterval,attr"`
+	DefaultFilter   Filter     `xml:"Filters>DefaultFilter>Filter"`
+	PackageFilters  []Filter   `xml:"Filters>PackageFilter>Filter"`
 }
 
 type Property struct {
@@ -57,7 +57,7 @@ type Level struct {
 
 type Rolling struct {
 	XMLName   xml.Name `xml:"Rolling"`
-	TimeBased int      `xml:"TimeBased"`
+	TimeBased string   `xml:"TimeBased"`
 	SizeBased int      `xml:"SizeBased"`
 	KeepCount int      `xml:"KeepCount"`
 }

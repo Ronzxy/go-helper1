@@ -22,6 +22,8 @@ import (
 )
 
 // Logger level
+type LogLevel int
+
 // ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF
 const (
 	ALL   = 0
@@ -45,8 +47,8 @@ const (
 )
 
 // Convert string level name to level
-func ConvertString2Level(str string) int {
-	level := 0
+func ConvertString2Level(str string) LogLevel {
+	var level LogLevel
 	switch strings.ToUpper(str) {
 	case "ALL":
 		level = ALL
@@ -69,7 +71,7 @@ func ConvertString2Level(str string) int {
 	return level
 }
 
-func ConvertLevel2String(level int) string {
+func ConvertLevel2String(level LogLevel) string {
 	str := ""
 
 	switch level {
@@ -118,7 +120,7 @@ func VariableReplaceByConfig(str string) string {
 			break
 		}
 
-		varName = RemoveEnterAndSpace(properties[varName])
+		varName = RemoveEnterAndSpace(propertyMap[varName])
 
 		str = strings.Replace(str, varPattern, varName, -1)
 	}

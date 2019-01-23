@@ -23,24 +23,25 @@ import (
 )
 
 type LoggerWriter struct {
-	allowLevel      int
-	denyLevel       int
-	workName        string // 工作名
-	loggerName      string // 日志名
-	logger          *log.Logger
+	allowLevel      LogLevel
+	denyLevel       LogLevel
+	prefix          string // 工作名
+	name            string // 日志名
 	formatter       Formatter
 	skipCallerDepth int
 	closeFilter     bool
 	showSQL         bool
+
+	*log.Logger
 }
 
-func NewLoggerWriter(w io.Writer, level int) *LoggerWriter {
+func NewLoggerWriter(w io.Writer, level LogLevel) *LoggerWriter {
 	this := &LoggerWriter{
 		allowLevel:      level,
 		denyLevel:       OFF,
-		workName:        helper.NewPathHelper().WorkName(),
-		logger:          log.New(w, "", log.LUTC),
+		prefix:          helper.NewPathHelper().WorkName(),
 		skipCallerDepth: defaultSkipCallerDepth,
+		Logger:          log.New(w, "", log.LUTC),
 	}
 
 	this.SetFormatter(NewTextFormatter())
@@ -48,7 +49,7 @@ func NewLoggerWriter(w io.Writer, level int) *LoggerWriter {
 	return this
 }
 
-func (this *LoggerWriter) SetDenyLevel(level int) {
+func (this *LoggerWriter) SetDenyLevel(level LogLevel) {
 	if level > this.denyLevel {
 		this.allowLevel = OFF
 	} else {
@@ -60,12 +61,8 @@ func (this *LoggerWriter) SetSkipCallerDepth(skipCallerDepth int) {
 	this.skipCallerDepth = skipCallerDepth
 }
 
-func (this *LoggerWriter) SetName(name string) {
-	this.workName = name
-}
-
 func (this *LoggerWriter) SetWriter(w io.Writer) {
-	this.logger.SetOutput(w)
+	this.SetOutput(w)
 }
 
 func (this *LoggerWriter) SetFormatter(formatter Formatter) {
@@ -77,11 +74,11 @@ func (this *LoggerWriter) filter(frame *runtime.Frame) bool {
 		return true
 	}
 
-	if config.Filters == nil {
+	if config.PackageFilters == nil {
 		return false
 	}
 
-	for _, filter := range config.Filters {
+	for _, filter := range config.PackageFilters {
 		packageName := GetPackageName(frame.Function)
 		if packageName == filter.Name {
 			if len(filter.Loggers) == 0 {
@@ -90,20 +87,20 @@ func (this *LoggerWriter) filter(frame *runtime.Frame) bool {
 			}
 
 			for _, name := range filter.Loggers {
-				if name == this.loggerName {
+				if name == this.name {
 					return true
 				}
 			}
 		}
 	}
 
-	if len(config.Default.Loggers) == 0 {
+	if len(config.DefaultFilter.Loggers) == 0 {
 		// No Logger define
 		return false
 	}
 
-	for _, name := range config.Default.Loggers {
-		if name == this.loggerName {
+	for _, name := range config.DefaultFilter.Loggers {
+		if name == this.name {
 			return true
 		}
 	}
@@ -111,61 +108,133 @@ func (this *LoggerWriter) filter(frame *runtime.Frame) bool {
 	return false
 }
 
-func (this *LoggerWriter) Println(level int, args ...interface{}) {
-	frame := GetCaller(this.skipCallerDepth)
-
-	if !this.filter(frame) {
-		return
-	}
-
+func (this *LoggerWriter) Write(level LogLevel, args ...interface{}) error {
 	// Reject logs that are less than the allowed level
 	if level < this.allowLevel {
-		return
+		return nil
 	}
 
 	// Reject logs greater than or equal to the rejection level
 	if level >= this.denyLevel {
-		return
+		return nil
+	}
+
+	frame := GetCaller(this.skipCallerDepth)
+
+	if !this.filter(frame) {
+		return nil
 	}
 
 	var (
 		data = map[string]interface{}{}
 	)
 
-	data["Name"] = this.workName
+	data["Prefix"] = this.prefix
 	data["Level"] = ConvertLevel2String(level)
 	data["Line"] = frame.Line
 	data["PackageName"] = GetPackageName(frame.Function)
 	data["File"] = GetFileName(frame)
 
-	this.logger.Println(this.formatter.Message(data, args...))
+	return this.Logger.Output(0, this.formatter.Message(data, args...))
+}
+
+/*
+Rewrite log.Logger function
+*/
+func (this *LoggerWriter) Output(calldepth int, s string) error {
+
+	return this.Write(ALL, s)
+}
+
+// Printf calls this.Output to print to the logger.
+// Arguments are handled in the manner of fmt.Printf.
+func (this *LoggerWriter) Printf(format string, v ...interface{}) {
+	this.Write(ALL, fmt.Sprintf(format, v...))
+}
+
+// Print calls this.Output to print to the logger.
+// Arguments are handled in the manner of fmt.Print.
+func (this *LoggerWriter) Print(v ...interface{}) { this.Write(ALL, fmt.Sprint(v...)) }
+
+// Println calls this.Output to print to the logger.
+// Arguments are handled in the manner of fmt.Println.
+func (this *LoggerWriter) Println(v ...interface{}) { this.Write(ALL, fmt.Sprintln(v...)) }
+
+// Fatal is equivalent to l.Print() followed by a call to os.Exit(1).
+func (this *LoggerWriter) Fatal(v ...interface{}) {
+	this.Write(ALL, fmt.Sprint(v...))
+	os.Exit(1)
+}
+
+// Fatalf is equivalent to l.Printf() followed by a call to os.Exit(1).
+func (this *LoggerWriter) Fatalf(format string, v ...interface{}) {
+	this.Write(ALL, fmt.Sprintf(format, v...))
+	os.Exit(1)
+}
+
+// Fatalln is equivalent to l.Println() followed by a call to os.Exit(1).
+func (this *LoggerWriter) Fatalln(v ...interface{}) {
+	this.Write(ALL, fmt.Sprintln(v...))
+	os.Exit(1)
+}
+
+// Panic is equivalent to l.Print() followed by a call to panic().
+func (this *LoggerWriter) Panic(v ...interface{}) {
+	s := fmt.Sprint(v...)
+	this.Write(ALL, s)
+	panic(s)
+}
+
+// Panicf is equivalent to l.Printf() followed by a call to panic().
+func (this *LoggerWriter) Panicf(format string, v ...interface{}) {
+	s := fmt.Sprintf(format, v...)
+	this.Write(ALL, s)
+	panic(s)
+}
+
+// Panicln is equivalent to l.Println() followed by a call to panic().
+func (this *LoggerWriter) Panicln(v ...interface{}) {
+	s := fmt.Sprintln(v...)
+	this.Write(ALL, s)
+	panic(s)
+}
+
+// Prefix returns the output prefix for the logger.
+func (this *LoggerWriter) Prefix() string {
+
+	return this.prefix
+}
+
+// SetPrefix sets the output prefix for the logger.
+func (this *LoggerWriter) SetPrefix(prefix string) {
+	this.prefix = prefix
 }
 
 /*
 Implement Writer
 */
-func (this *FileLogger) Tracef(format string, args ...interface{}) {
-	this.Println(TRACE, fmt.Sprintf(format, args...))
+func (this *LoggerWriter) Tracef(format string, args ...interface{}) {
+	this.Write(TRACE, fmt.Sprintf(format, args...))
 }
 
-func (this *FileLogger) Debugf(format string, args ...interface{}) {
-	this.Println(DEBUG, fmt.Sprintf(format, args...))
+func (this *LoggerWriter) Debugf(format string, args ...interface{}) {
+	this.Write(DEBUG, fmt.Sprintf(format, args...))
 }
 
-func (this *FileLogger) Infof(format string, args ...interface{}) {
-	this.Println(INFO, fmt.Sprintf(format, args...))
+func (this *LoggerWriter) Infof(format string, args ...interface{}) {
+	this.Write(INFO, fmt.Sprintf(format, args...))
 }
 
-func (this *FileLogger) Warnf(format string, args ...interface{}) {
-	this.Println(WARN, fmt.Sprintf(format, args...))
+func (this *LoggerWriter) Warnf(format string, args ...interface{}) {
+	this.Write(WARN, fmt.Sprintf(format, args...))
 }
 
-func (this *FileLogger) Errorf(format string, args ...interface{}) {
-	this.Println(ERROR, fmt.Sprintf(format, args...))
+func (this *LoggerWriter) Errorf(format string, args ...interface{}) {
+	this.Write(ERROR, fmt.Sprintf(format, args...))
 }
 
-func (this *FileLogger) Fatalf(exit bool, format string, args ...interface{}) {
-	this.Println(FATAL, fmt.Sprintf(format, args...))
+func (this *LoggerWriter) FatalfWithExit(exit bool, format string, args ...interface{}) {
+	this.Write(FATAL, fmt.Sprintf(format, args...))
 
 	if exit {
 		os.Exit(1)
@@ -173,28 +242,28 @@ func (this *FileLogger) Fatalf(exit bool, format string, args ...interface{}) {
 }
 
 // ALL < TRACE < DEBUG < INFO < WARN < ERROR < FATAL < OFF
-func (this *FileLogger) Trace(args ...interface{}) {
-	this.Println(TRACE, args...)
+func (this *LoggerWriter) Trace(args ...interface{}) {
+	this.Write(TRACE, args...)
 }
 
-func (this *FileLogger) Debug(args ...interface{}) {
-	this.Println(DEBUG, args...)
+func (this *LoggerWriter) Debug(args ...interface{}) {
+	this.Write(DEBUG, args...)
 }
 
-func (this *FileLogger) Info(args ...interface{}) {
-	this.Println(INFO, args...)
+func (this *LoggerWriter) Info(args ...interface{}) {
+	this.Write(INFO, args...)
 }
 
-func (this *FileLogger) Warn(args ...interface{}) {
-	this.Println(WARN, args...)
+func (this *LoggerWriter) Warn(args ...interface{}) {
+	this.Write(WARN, args...)
 }
 
-func (this *FileLogger) Error(args ...interface{}) {
-	this.Println(ERROR, args...)
+func (this *LoggerWriter) Error(args ...interface{}) {
+	this.Write(ERROR, args...)
 }
 
-func (this *FileLogger) Fatal(exit bool, args ...interface{}) {
-	this.Println(FATAL, args...)
+func (this *LoggerWriter) FatalWithExit(exit bool, args ...interface{}) {
+	this.Write(FATAL, args...)
 
 	if exit {
 		os.Exit(1)

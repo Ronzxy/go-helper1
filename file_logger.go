@@ -31,7 +31,7 @@ type FileLogger struct {
 	storeFirst int
 }
 
-func NewFileLogger(level int, configFile string) (*FileLogger, error) {
+func NewFileLogger(level LogLevel, configFile string) (*FileLogger, error) {
 	var (
 		fileLogger = &FileLogger{}
 		err        error

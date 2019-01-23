@@ -40,7 +40,7 @@ import (
 )
 
 func main()  {
-    err := logger.InitLogger("example/logger.xml")
+    err := logger.Init("example/logger.xml")
 
     if err != nil {
         logger.DefaultConsoleLogger().Error(err.Error())
@@ -85,7 +85,7 @@ import (
 )
 
 func main()  {
-    fileLogger, err := logger.NewFileLogger(logger.ALL, "logs/fileLogger.log", 0644)
+    fileLogger, err := logger.NewFileLogger(logger.ALL, "logs/fileLogger.log")
     if err != nil {
         logger.DefaultConsoleLogger().Error(err.Error())
         return
