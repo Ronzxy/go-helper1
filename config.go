@@ -38,6 +38,7 @@ type Logger struct {
 	Target      string   `xml:"target,attr"`
 	FileName    string   `xml:"fileName,attr"`
 	FilePattern string   `xml:"filePattern,attr"`
+	Compress    string   `xml:"compress,attr"`
 	Format      Format   `xml:"Format"`
 	Level       Level    `xml:"Level"`
 	Rolling     Rolling  `xml:"Rolling"`

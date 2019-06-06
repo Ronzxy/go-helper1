@@ -30,7 +30,8 @@
     	</Logger>
 
         <Logger name="FileTrace" target="FILE" fileName="${LOG_PATH}/trace.log"
-                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/trace-%{date:yyyy-mm-dd}-%{i}.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/trace-%{date:yyyy-mm-dd}-%{i}.log"
+                compress="gzip">
             <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
             <Format type="json">
                 ${LOG_FORMAT}
@@ -52,7 +53,8 @@
         </Logger>
 
         <Logger name="FileDebug" target="FILE" fileName="${LOG_PATH}/debug.log"
-                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/debug-%{date:yyyy-mm-dd}-%{i}.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/debug-%{date:yyyy-mm-dd}-%{i}.log"
+                compress="gzip">
             <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
             <Format type="json">
                 ${LOG_FORMAT}
@@ -74,7 +76,8 @@
         </Logger>
 
     	<Logger name="FileInfo" target="FILE" fileName="${LOG_PATH}/info.log"
-    				filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/info-%{date:yyyy-mm-dd}-%{i}.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/info-%{date:yyyy-mm-dd}-%{i}.log"
+                compress="gzip">
             <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
             <Format type="json">
                 ${LOG_FORMAT}
@@ -96,7 +99,8 @@
     	</Logger>
 
     	<Logger name="FileWarn" target="FILE" fileName="${LOG_PATH}/warn.log"
-    				filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/warn-%{date:yyyy-mm-dd}-%{i}.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/warn-%{date:yyyy-mm-dd}-%{i}.log"
+                compress="gzip">
             <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
             <Format type="json">
                 ${LOG_FORMAT}
@@ -118,7 +122,8 @@
     	</Logger>
 
         <Logger name="FileError" target="FILE" fileName="${LOG_PATH}/error.log"
-                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/error-%{date:yyyy-mm-dd}-%{i}.log.gz">
+                filePattern="${LOG_STORAGE_PATH}/%{date:yyyy/mm}/error-%{date:yyyy-mm-dd}-%{i}.log"
+                compress="gzip">
             <!--日志格式，如果type不为text，LOG_FORMAT将被忽略-->
             <Format type="json">
                 ${LOG_FORMAT}
@@ -129,7 +134,7 @@
             </Level>
             <Rolling>
                 <!-- 基于时间滚动，使用 cron 库，文档：https://godoc.org/github.com/robfig/cron -->
-                <TimeBased>@daily</TimeBased>
+                <TimeBased>@every 1m</TimeBased>
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
@@ -162,6 +167,10 @@
             </Filter>
 
             <Filter name="github.com/skygangsta/go-logger">
+                <Logger>FileError</Logger>
+            </Filter>
+
+            <Filter name="main">
                 <Logger>FileError</Logger>
             </Filter>
         </PackageFilter>

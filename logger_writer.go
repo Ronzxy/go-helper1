@@ -49,6 +49,10 @@ func NewLoggerWriter(w io.Writer, level LogLevel) *LoggerWriter {
 	return this
 }
 
+func (this *LoggerWriter) NewLogger(w io.Writer) {
+	this.Logger = log.New(w, "", log.LUTC)
+}
+
 func (this *LoggerWriter) SetDenyLevel(level LogLevel) {
 	if level > this.denyLevel {
 		this.allowLevel = OFF
@@ -99,6 +103,7 @@ func (this *LoggerWriter) filter(frame *runtime.Frame) bool {
 		return false
 	}
 
+	// TODO: if define by package name whether the default filer can be used?
 	for _, name := range config.DefaultFilter.Loggers {
 		if name == this.name {
 			return true
