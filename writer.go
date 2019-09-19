@@ -12,7 +12,7 @@
 
 package logger
 
-import "github.com/go-xorm/core"
+import "xorm.io/core"
 
 // logger writer interface
 type Writer interface {

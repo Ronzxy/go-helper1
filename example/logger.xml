@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--日志级别以及优先级排序: OFF > FATAL > ERROR > WARN > INFO > DEBUG > TRACE > ALL -->
-<!--rollingInterval：logger能够自动滚动文件，设置滚动间隔秒数-->
+<!--rollingInterval：设置基于大小的日志文件滚动检查间隔，单位秒-->
 <Configuration rollingInterval="60">
     <Properties>
         <!--日志输出格式-->
@@ -9,7 +9,7 @@
         </Property>
         <!--日志写入路径-->
         <Property name="LOG_PATH">
-            logs/
+            logs
         </Property>
         <!--日志存储路径-->
         <Property name="LOG_STORAGE_PATH">
@@ -134,7 +134,7 @@
             </Level>
             <Rolling>
                 <!-- 基于时间滚动，使用 cron 库，文档：https://godoc.org/github.com/robfig/cron -->
-                <TimeBased>@every 1m</TimeBased>
+                <TimeBased>@daily</TimeBased>
                 <!-- 基于尺寸滚动，单位MB -->
                 <SizeBased>100</SizeBased>
                 <!-- 同一文件最多历史文件数，设置值小于0为不限制 -->
@@ -143,11 +143,10 @@
         </Logger>
     </Loggers>
     <Filters>
+        <!--默认过滤器，用于所有日志输出-->
         <DefaultFilter>
             <Filter>
                 <Logger>Console</Logger>
-                <Logger>FileInfo</Logger>
-                <Logger>FileError</Logger>
             </Filter>
         </DefaultFilter>
         <PackageFilter>
@@ -171,6 +170,7 @@
             </Filter>
 
             <Filter name="main">
+                <Logger>FileInfo</Logger>
                 <Logger>FileError</Logger>
             </Filter>
         </PackageFilter>

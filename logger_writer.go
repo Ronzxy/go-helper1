@@ -14,12 +14,12 @@ package logger
 
 import (
 	"fmt"
-	"github.com/go-xorm/core"
 	"github.com/skygangsta/go-helper"
 	"io"
 	"log"
 	"os"
 	"runtime"
+	"xorm.io/core"
 )
 
 type LoggerWriter struct {
