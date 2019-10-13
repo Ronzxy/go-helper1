@@ -14,8 +14,9 @@ package logger
 
 import (
 	"fmt"
-	"io"
+	"github.com/skygangsta/go-helper"
 	"os"
+	"path"
 	"regexp"
 	"runtime"
 	"strings"
@@ -39,7 +40,8 @@ const (
 )
 
 var (
-	DefaultWriter io.Writer = os.Stdout
+	DefaultWriter  = os.Stdout
+	FileWithoutPKG = false
 )
 
 const (
@@ -164,14 +166,58 @@ func GetPackageName(f string) string {
 }
 
 func GetFileName(frame *runtime.Frame) string {
-	index := 0
-	packageName := GetPackageName(frame.Function)
-
-	if packageName != "" {
-		if strings.Count(frame.File, packageName) > 0 {
-			index = strings.LastIndex(frame.File, packageName)
+	var (
+		err error
+		i   = 0
+		s   = ""
+	)
+	if FileWithoutPKG {
+		s, err = helper.Path.FileName(frame.File)
+		if err == nil {
+			return s
 		}
 	}
 
-	return frame.File[index:]
+	s = GetPackageName(frame.Function)
+
+	if s != "" {
+		if s != "main" {
+			if strings.Count(frame.File, s) > 0 {
+				i = strings.LastIndex(frame.File, s)
+				return frame.File[i:]
+			}
+		}
+	}
+
+	s = os.Getenv("GOPATH")
+
+	if s != "" {
+		if strings.Count(s, ":") > 0 {
+			paths := strings.Split(s, ":")
+			for _, s = range paths {
+				s = path.Join(s, "src")
+
+				if strings.Contains(frame.File, s) {
+					i = len(s) + 1
+				}
+			}
+		} else {
+			s = path.Join(s, "src")
+
+			if strings.Contains(frame.File, s) {
+				i = len(s) + 1
+			}
+		}
+	}
+
+	if i <= 0 {
+		var err error
+
+		s, err = helper.Path.FileName(frame.File)
+		if err == nil {
+			return s
+		}
+	}
+
+	return frame.File[i:]
 }

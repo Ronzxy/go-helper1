@@ -39,7 +39,7 @@ func NewLoggerWriter(w io.Writer, level LogLevel) *LoggerWriter {
 	this := &LoggerWriter{
 		allowLevel:      level,
 		denyLevel:       OFF,
-		prefix:          helper.NewPathHelper().WorkName(),
+		prefix:          helper.Path.WorkName(),
 		skipCallerDepth: defaultSkipCallerDepth,
 		Logger:          log.New(w, "", log.LUTC),
 	}

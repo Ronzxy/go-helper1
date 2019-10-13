@@ -69,40 +69,24 @@ func NewFileLoggerWithConfig(v Logger) (*FileLogger, error) {
 
 func (this *FileLogger) createDir(fileName string) error {
 	var (
-		pathHelper = helper.NewPathHelper()
-		isExist    bool
-		dirs       []string
-		filePath   string
-		err        error
+		isExist  bool
+		filePath string
+		err      error
 	)
-	filePath, err = pathHelper.Dir(fileName)
+	filePath, err = helper.Path.Dir(fileName)
 	if err != nil {
 		return err
 	}
 
-	isExist, err = pathHelper.IsExist(filePath)
+	isExist, err = helper.Path.IsExist(filePath)
 	if err != nil {
 		return err
 	}
 
 	if !isExist {
-		dirs = pathHelper.Split(filePath)
-
-		filePath = ""
-		for _, v := range dirs {
-			if v == "" {
-				filePath = "/"
-			} else {
-				filePath = path.Join(filePath, v)
-
-				err = pathHelper.Create(filePath, 0755)
-				if err != nil {
-					isExist, _ = pathHelper.IsExist(filePath)
-					if !isExist {
-						return err
-					}
-				}
-			}
+		err = helper.Path.CreateDir(filePath, 0755)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -147,7 +131,7 @@ func (this *FileLogger) variableReplaceBySystem(str string) string {
 		case "date":
 			{
 				if vars[1] != "" {
-					varName = helper.NewTimeHelper().Format(time.Now(), strings.Join(vars[1:], ":"))
+					varName = helper.Time.Format(strings.Join(vars[1:], ":"), time.Now())
 				} else {
 					varName = time.Now().Format(DefaultLogTimeFormat)
 				}
@@ -197,15 +181,12 @@ func (this *FileLogger) RollingFile() {
 		newFileName   string
 		err           error
 		isExist       bool
-		//logFile       = this.variableReplacer(this.config.FileName)
-		pathHelper = helper.NewPathHelper()
-		fileHelper = helper.NewFileHelper()
 	)
 
 	for {
 		storeFileName = this.variableReplacer(this.config.FilePattern)
 
-		isExist, err = pathHelper.IsExist(storeFileName)
+		isExist, err = helper.Path.IsExist(storeFileName)
 		if err != nil {
 			Errorf("check file exist error: %s", err.Error())
 			return
@@ -245,13 +226,13 @@ func (this *FileLogger) RollingFile() {
 		return
 	}
 
-	newPath, err := pathHelper.Dir(this.writer.Name())
+	newPath, err := helper.Path.Dir(this.writer.Name())
 	if err != nil {
 		Errorf("get log file base path error: %s", err.Error())
 		return
 	}
 
-	newName, err := pathHelper.FileName(storeFileName)
+	newName, err := helper.Path.FileName(storeFileName)
 	if err != nil {
 		Errorf("get log file name error: %s", err.Error())
 		return
@@ -280,7 +261,7 @@ func (this *FileLogger) RollingFile() {
 	case "gzip":
 		{
 			// gzip file to store path
-			err = fileHelper.GZipFile(newFileName, storeFileName+".gz")
+			err = helper.File.GZipFile(newFileName, storeFileName+".gz")
 			if err != nil {
 				Errorf("gzip file error: %s", err.Error())
 				return
@@ -289,7 +270,7 @@ func (this *FileLogger) RollingFile() {
 	default:
 		{
 			// copyFile file to store path
-			_, err = fileHelper.CopyFile(newFileName, storeFileName)
+			_, err = helper.File.CopyFile(newFileName, storeFileName)
 			if err != nil {
 				Errorf("copy log file error: %s", err.Error())
 				return
@@ -303,9 +284,8 @@ func (this *FileLogger) RollingFile() {
 
 func (this *FileLogger) keepFile() {
 	var (
-		storeFile  string
-		logFile    = this.variableReplacer(this.config.FileName)
-		pathHelper = helper.NewPathHelper()
+		storeFile string
+		logFile   = this.variableReplacer(this.config.FileName)
 	)
 	if (this.storeIndex - this.storeFirst - this.config.Rolling.KeepCount) >= 0 {
 		for i := this.storeFirst; i <= this.storeIndex-this.config.Rolling.KeepCount; i++ {
@@ -325,13 +305,13 @@ func (this *FileLogger) keepFile() {
 				storeFile = storeFile[:inx]
 			}
 
-			newPath, err := pathHelper.Dir(logFile)
+			newPath, err := helper.Path.Dir(logFile)
 			if err != nil {
 				Errorf("get log file base path error: %s", err.Error())
 				return
 			}
 
-			newName, err := pathHelper.FileName(storeFile)
+			newName, err := helper.Path.FileName(storeFile)
 			if err != nil {
 				Errorf("get log file name error: %s", err.Error())
 				return
