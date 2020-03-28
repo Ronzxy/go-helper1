@@ -153,7 +153,7 @@
             <!--
                 go-logger 实现了 go-xorm ILogger 接口但它不直接使用 go-logger 记录需要在代码中主动设置 go-xorm 日志
 
-                writes := logger.GetByPackage("xorm.io/xorm")
+                writes := logger.GetByPackage("github.com/ronzxy/go-xorm")
                 if writes != nil {
                     for _, v := range writes {
                         v.ShowSQL()
@@ -161,7 +161,7 @@
                     }
                 }
             -->
-            <Filter name="xorm.io/xorm">
+            <Filter name="github.com/ronzxy/go-xorm">
                 <Logger>FileInfo</Logger>
             </Filter>
 

@@ -13,7 +13,7 @@
 package logger
 
 import (
-	xormlog "xorm.io/xorm/log"
+	xormlog "github.com/ronzxy/go-xorm/log"
 )
 
 // logger writer interface

@@ -34,7 +34,12 @@ func (this *JSONFormatter) Message(data map[string]interface{}, args ...interfac
 	)
 
 	data["Time"] = time.Now().Format(DefaultLogTimeFormat)
-	data["Message"] = args
+	switch len(args) {
+	case 1:
+		data["Message"] = args[0]
+	default:
+		data["Message"] = args
+	}
 
 	if this.Indent {
 		buf, err = json.MarshalIndent(data, "", "")

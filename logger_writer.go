@@ -19,7 +19,7 @@ import (
 	"log"
 	"os"
 	"runtime"
-	xormlog "xorm.io/xorm/log"
+	xormlog "github.com/ronzxy/go-xorm/log"
 )
 
 type LoggerWriter struct {
@@ -114,6 +114,10 @@ func (this *LoggerWriter) filter(frame *runtime.Frame) bool {
 }
 
 func (this *LoggerWriter) Write(level LogLevel, args ...interface{}) error {
+	if len(args) <= 0 {
+		return fmt.Errorf("empty args")
+	}
+
 	// Reject logs that are less than the allowed level
 	if level < this.allowLevel {
 		return nil
@@ -140,7 +144,9 @@ func (this *LoggerWriter) Write(level LogLevel, args ...interface{}) error {
 	data["PackageName"] = GetPackageName(frame.Function)
 	data["File"] = GetFileName(frame)
 
-	return this.Logger.Output(0, this.formatter.Message(data, args...))
+	message := this.formatter.Message(data, args...)
+
+	return this.Logger.Output(0, message)
 }
 
 /*
@@ -301,9 +307,9 @@ func (this *LoggerWriter) IsShowSQL() bool {
 }
 
 func (this *LoggerWriter) BeforeSQL(context xormlog.LogContext) {
-	fmt.Println(context)
+	//this.Write(INFO, fmt.Sprintf(format, args...))
 }
 
 func (this *LoggerWriter) AfterSQL(context xormlog.LogContext) {
-	fmt.Println(context)
+	this.Write(INFO, context)
 }
