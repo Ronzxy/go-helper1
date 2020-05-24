@@ -1,4 +1,4 @@
-/* Copyright 2018 sky<skygangsta@hotmail.com>. All rights reserved.
+/* Copyright 2018 Ron Zhang <ronzxy@mx.aketi.cn>. All rights reserved.
  *
  * Licensed under the Apache License, version 2.0 (the "License").
  * You may not use this work except in compliance with the License, which is
@@ -14,7 +14,7 @@ package logger
 
 import (
 	"fmt"
-	"github.com/skygangsta/go-helper"
+	"github.com/ronzxy/go-helper"
 	"io"
 	"log"
 	"os"

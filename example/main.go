@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/skygangsta/go-logger"
+	"github.com/ronzxy/go-logger"
 	"path"
 	"time"
 )

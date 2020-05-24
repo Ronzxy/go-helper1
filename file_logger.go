@@ -1,4 +1,4 @@
-/* Copyright 2018 sky<skygangsta@hotmail.com>. All rights reserved.
+/* Copyright 2018 Ron Zhang <ronzxy@mx.aketi.cn>. All rights reserved.
  *
  * Licensed under the Apache License, version 2.0 (the "License").
  * You may not use this work except in compliance with the License, which is
@@ -15,7 +15,7 @@ package logger
 import (
 	"errors"
 	"fmt"
-	"github.com/skygangsta/go-helper"
+	"github.com/ronzxy/go-helper"
 	"os"
 	"path"
 	"strings"
@@ -66,7 +66,7 @@ func NewFileLoggerWithConfig(v Logger) (*FileLogger, error) {
 
 	return fileLogger, err
 }
-
+// TODO: fileroll error
 func (this *FileLogger) createDir(fileName string) error {
 	var (
 		isExist  bool
@@ -85,7 +85,7 @@ func (this *FileLogger) createDir(fileName string) error {
 
 	if !isExist {
 		err = helper.Path.CreateDir(filePath, 0755)
-		if err != nil {
+		if err != nil && err.Error() != "file exists" {
 			return err
 		}
 	}

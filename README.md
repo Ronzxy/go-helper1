@@ -1,14 +1,14 @@
 # go-logger
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/skygangsta/go-logger)](https://goreportcard.com/report/github.com/skygangsta/go-logger)
-[![GoDoc](https://godoc.org/github.com/skygangsta/go-logger?status.svg)](https://godoc.org/github.com/skygangsta/go-logger)
-[![Github All Releases](https://img.shields.io/github/downloads/skygangsta/go-logger/total.svg)](https://github.com/skygangsta/go-logger/releases)
-[![GitHub release](https://img.shields.io/github/release/skygangsta/go-logger/all.svg)](https://github.com/skygangsta/go-logger/releases)
-[![GitHub Release Date](https://img.shields.io/github/release-date-pre/skygangsta/go-logger.svg)](https://github.com/skygangsta/go-logger/releases)
-[![GitHub license](https://img.shields.io/github/license/skygangsta/go-logger.svg)](https://github.com/skygangsta/go-logger/blob/master/LICENSE)
-[![GitHub stars](https://img.shields.io/github/stars/skygangsta/go-logger.svg)](https://github.com/skygangsta/go-logger/stargazers)
-[![GitHub forks](https://img.shields.io/github/forks/skygangsta/go-logger.svg)](https://github.com/skygangsta/go-logger/network)
-[![Sourcegraph](https://sourcegraph.com/github.com/skygangsta/go-logger/-/badge.svg)](https://sourcegraph.com/github.com/skygangsta/go-logger?badge)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ronzxy/go-logger)](https://goreportcard.com/report/github.com/ronzxy/go-logger)
+[![GoDoc](https://godoc.org/github.com/ronzxy/go-logger?status.svg)](https://godoc.org/github.com/ronzxy/go-logger)
+[![Github All Releases](https://img.shields.io/github/downloads/ronzxy/go-logger/total.svg)](https://github.com/ronzxy/go-logger/releases)
+[![GitHub release](https://img.shields.io/github/release/ronzxy/go-logger/all.svg)](https://github.com/ronzxy/go-logger/releases)
+[![GitHub Release Date](https://img.shields.io/github/release-date-pre/ronzxy/go-logger.svg)](https://github.com/ronzxy/go-logger/releases)
+[![GitHub license](https://img.shields.io/github/license/ronzxy/go-logger.svg)](https://github.com/ronzxy/go-logger/blob/master/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/ronzxy/go-logger.svg)](https://github.com/ronzxy/go-logger/stargazers)
+[![GitHub forks](https://img.shields.io/github/forks/ronzxy/go-logger.svg)](https://github.com/ronzxy/go-logger/network)
+[![Sourcegraph](https://sourcegraph.com/github.com/ronzxy/go-logger/-/badge.svg)](https://sourcegraph.com/github.com/ronzxy/go-logger?badge)
 
 ## Description
 
@@ -19,7 +19,7 @@ A log library for golang. Can be initialized from xml format configuration file,
 This package can be installed with the go get command:
 
 ```sh
-    go get github.com/skygangsta/go-logger
+    go get github.com/ronzxy/go-logger
 ```
 
 ### Logger Level
@@ -30,13 +30,13 @@ This package can be installed with the go get command:
 
 ### Initialized
 
-LoggerWriter is a complete logger that supports automatic scrolling of logger files by time or file size. It's initial by config file with xml format "[example/logger.xml](https://github.com/skygangsta/go-logger/blob/master/example/logger.xml)":
+LoggerWriter is a complete logger that supports automatic scrolling of logger files by time or file size. It's initial by config file with xml format "[example/logger.xml](https://github.com/ronzxy/go-logger/blob/master/example/logger.xml)":
 
 ```go
 package main
 
 import (
-    "github.com/skygangsta/go-logger"
+    "github.com/ronzxy/go-logger"
 )
 
 func main()  {
@@ -63,7 +63,7 @@ Console logger outputs log information to stdout:
 package main
 
 import (
-    "github.com/skygangsta/go-logger"
+    "github.com/ronzxy/go-logger"
 )
 
 func main()  {
@@ -81,7 +81,7 @@ File logger outputs log information to a file:
 package main
 
 import (
-    "github.com/skygangsta/go-logger"
+    "github.com/ronzxy/go-logger"
 )
 
 func main()  {

@@ -2,7 +2,7 @@ package logger
 
 import (
 	"fmt"
-	"github.com/skygangsta/go-helper"
+	"github.com/ronzxy/go-helper"
 	"strings"
 	"time"
 )

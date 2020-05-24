@@ -165,7 +165,7 @@
                 <Logger>FileInfo</Logger>
             </Filter>
 
-            <Filter name="github.com/skygangsta/go-logger">
+            <Filter name="github.com/ronzxy/go-logger">
                 <Logger>FileError</Logger>
             </Filter>
 
