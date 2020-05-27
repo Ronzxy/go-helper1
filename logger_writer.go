@@ -19,7 +19,7 @@ import (
 	"log"
 	"os"
 	"runtime"
-	"xorm.io/core"
+	xormlog "xorm.io/xorm/log"
 )
 
 type LoggerWriter struct {
@@ -279,12 +279,12 @@ func (this *LoggerWriter) FatalWithExit(exit bool, args ...interface{}) {
 Implement xorm logger
 */
 
-func (this *LoggerWriter) Level() core.LogLevel {
+func (this *LoggerWriter) Level() xormlog.LogLevel {
 	// Set to xorm log all
-	return core.LOG_DEBUG
+	return xormlog.LOG_DEBUG
 }
 
-func (this *LoggerWriter) SetLevel(l core.LogLevel) {
+func (this *LoggerWriter) SetLevel(l xormlog.LogLevel) {
 
 }
 
@@ -298,4 +298,12 @@ func (this *LoggerWriter) ShowSQL(show ...bool) {
 
 func (this *LoggerWriter) IsShowSQL() bool {
 	return this.showSQL
+}
+
+func (this *LoggerWriter) BeforeSQL(context xormlog.LogContext) {
+	fmt.Println(context)
+}
+
+func (this *LoggerWriter) AfterSQL(context xormlog.LogContext) {
+	fmt.Println(context)
 }

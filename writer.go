@@ -12,7 +12,9 @@
 
 package logger
 
-import "xorm.io/core"
+import (
+	xormlog "xorm.io/xorm/log"
+)
 
 // logger writer interface
 type Writer interface {
@@ -46,9 +48,13 @@ type Writer interface {
 	   Include xorm logger
 	*/
 
-	Level() core.LogLevel
+	BeforeSQL(context xormlog.LogContext) // only invoked when IsShowSQL is true
 
-	SetLevel(l core.LogLevel)
+	AfterSQL(context xormlog.LogContext)  // only invoked when IsShowSQL is true
+
+	Level() xormlog.LogLevel
+
+	SetLevel(l xormlog.LogLevel)
 
 	ShowSQL(show ...bool)
 
